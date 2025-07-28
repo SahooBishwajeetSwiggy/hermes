@@ -1,0 +1,28 @@
+average_speed: 10  # in km/h
+depot_index: 0
+enable_time_windows: true
+service_time: 5  # in minutes
+working_hours: 540  # in minutes (9 hours)
+time_config:
+  day_start: "09:00"  # Day start time
+  day_end: "18:00"    # Day end time
+  depot_window: [0, 540]  # Depot available entire working day (9 hours in minutes)
+vehicle_types:
+  EV_3W:
+    count: 7
+    capacity: 450
+    max_distance: 150000
+    fixed_cost: 1650
+    cost_per_delivery: 0
+  TATA_ACE_4W:
+    count: 7
+    capacity: 900
+    max_distance: 300000
+    fixed_cost: 1950
+    cost_per_delivery: 0
+  BIKE_2W:
+    count: 1
+    capacity: 20
+    max_distance: 60000
+    fixed_cost: 400
+    cost_per_delivery: 60
