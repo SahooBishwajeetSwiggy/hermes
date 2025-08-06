@@ -56,6 +56,7 @@ class RollingSolver:
             solver_input["time_matrix"],
             solver_input["time_windows"],
             solver_input["amounts"],
+            solver_input["sizes"],
             load_config()
         )
         

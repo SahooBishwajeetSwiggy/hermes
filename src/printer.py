@@ -10,6 +10,7 @@ def print_solution(data, routing, manager, solution):
         vehicle_type_list,
         vehicle_fixed_costs,
         vehicle_per_delivery_costs,
+        vehicle_type_capacities
     ) = expand_vehicle_types(load_config())
 
     total_vehicles_used = 0

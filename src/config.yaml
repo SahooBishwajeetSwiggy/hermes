@@ -9,20 +9,23 @@ time_config:
   depot_window: [0, 540]  # Depot available entire working day (9 hours in minutes)
 vehicle_types:
   EV_3W:
-    count: 7
+    count: 4
     capacity: 450
     max_distance: 150000
     fixed_cost: 1650
     cost_per_delivery: 0
+    allowed_sizes: [0, 1]
   TATA_ACE_4W:
-    count: 7
+    count: 3
     capacity: 900
     max_distance: 300000
     fixed_cost: 1950
     cost_per_delivery: 0
+    allowed_sizes: [0, 1, 2]
   BIKE_2W:
     count: 1
     capacity: 20
     max_distance: 60000
     fixed_cost: 400
     cost_per_delivery: 60
+    allowed_sizes: [0]

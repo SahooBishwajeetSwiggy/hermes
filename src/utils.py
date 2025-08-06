@@ -40,6 +40,7 @@ def generate_solver_input(input_data):
     location_labels = ["Depot"]
     demands = [0]  # Depot has zero demand
     amounts = [0]  # Depot has zero amount
+    sizes = [None]
     time_windows = [config["time_config"]["depot_window"]]  # Depot time window
     
     # Process each delivery
@@ -48,6 +49,7 @@ def generate_solver_input(input_data):
         location_labels.append(delivery["loc"])
         demands.append(int(delivery["wt"]))
         amounts.append(float(delivery["amt"].replace(",", "")))
+        sizes.append(int(delivery["sz"]))
         
         # Process time windows
         start_offset = calculate_time_offset(delivery["st"], day_start)
@@ -79,6 +81,7 @@ def generate_solver_input(input_data):
         "time_windows": time_windows,
         "demands": demands,
         "amounts": amounts,
+        "sizes": sizes,
         "locations": location_labels,
         "coords": locations
     }
@@ -104,6 +107,7 @@ def expand_vehicle_types(config):
     vehicle_type_list = []
     vehicle_fixed_costs = []
     vehicle_per_delivery_costs = []
+    vehicle_allowed_sizes = []
 
     for vehicle_type, props in config["vehicle_types"].items():
         for _ in range(props["count"]):
@@ -112,6 +116,6 @@ def expand_vehicle_types(config):
             vehicle_type_list.append(vehicle_type)
             vehicle_fixed_costs.append(props.get("fixed_cost", 0))
             vehicle_per_delivery_costs.append(props.get("cost_per_delivery", 0))
+            vehicle_allowed_sizes.append(set(props.get("allowed_sizes", [])))
 
-    return vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs
-
+    return vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_allowed_sizes

@@ -2,15 +2,25 @@ from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 from src.utils import expand_vehicle_types
 
 
-def create_routing_model(distance_matrix, demands, time_matrix, time_windows, amounts, config):
+def create_routing_model(distance_matrix, demands, time_matrix, time_windows, amounts, sizes, config):
     # Initialize vehicle parameters
-    vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_delivery_costs = expand_vehicle_types(config)
+    vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_allowed_sizes = expand_vehicle_types(config)
     num_vehicles = len(vehicle_capacities)
     config["num_vehicles"] = num_vehicles
-
+    
     # Create routing model
     manager = pywrapcp.RoutingIndexManager(len(distance_matrix), num_vehicles, config["depot_index"])
     routing = pywrapcp.RoutingModel(manager)
+
+    # 0. Enforce size contraint based on vehicle type
+    for node in range(1, len(distance_matrix)):  # skip depot
+        pkg_size = sizes[node]
+        if pkg_size is None:
+            continue
+        for vehicle_id, allowed in enumerate(vehicle_allowed_sizes):
+            if pkg_size not in allowed:
+                # Prevent this node from being assigned to this vehicle
+                routing.VehicleVar(manager.NodeToIndex(node)).RemoveValue(vehicle_id)
 
     # 1. Cost Optimization - Primary Objective
     def cost_callback(from_index, to_index):
@@ -19,13 +29,13 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
             to_node = manager.IndexToNode(to_index)
             vehicle_idx = routing.VehicleIndex(from_index)
             
-            if vehicle_idx < 0 or vehicle_idx >= len(vehicle_delivery_costs):
+            if vehicle_idx < 0 or vehicle_idx >= len(vehicle_per_delivery_costs):
                 return 0
 
             # Combine distance cost (weighted lower) with delivery and fixed costs
             distance = int(distance_matrix[from_node][to_node])
             distance_cost = int(distance * 0.005)
-            delivery_cost = vehicle_delivery_costs[vehicle_idx] if to_node != config["depot_index"] else 0
+            delivery_cost = vehicle_per_delivery_costs[vehicle_idx] if to_node != config["depot_index"] else 0
             fixed_cost = vehicle_fixed_costs[vehicle_idx] if from_node == config["depot_index"] else 0
             
             return distance_cost + delivery_cost + fixed_cost
@@ -137,4 +147,5 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
     search_parameters.time_limit.seconds = 5
 
     solution = routing.SolveWithParameters(search_parameters)
+    
     return routing, manager, solution
