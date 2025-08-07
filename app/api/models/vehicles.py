@@ -1,7 +1,14 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from typing import List, Optional, Set
 from datetime import datetime, timezone
 import uuid
+from app.db.json_db import JsonDB
+
+def get_vehicle_types() -> Set[str]:
+    """Get the list of available vehicle types from global config"""
+    db = JsonDB()
+    global_config = db.yaml_config.get_global_config()
+    return set(global_config.get('vehicle_types', {}).keys())
 
 class VehicleBase(BaseModel):
     """
@@ -13,6 +20,8 @@ class VehicleBase(BaseModel):
     vehicle_type: str = Field(..., 
         description="Type of vehicle (EV_3W, TATA_ACE_4W, BIKE_2W)",
         example="EV_3W")
+    warehouse_id: str = Field(...,
+        description="ID of the warehouse this vehicle is assigned to")
     registration_number: str = Field(..., 
         description="Vehicle registration number",
         example="KA01AB1234")
@@ -24,18 +33,15 @@ class VehicleBase(BaseModel):
         example="+91-9876543210")
     availability_status: bool = Field(True, 
         description="Whether the vehicle is currently available")
-    current_capacity: Optional[float] = Field(None,
-        description="Current available capacity of the vehicle",
-        example=450.0)
     total_distance_today: float = Field(0.0,
         description="Total distance covered today in meters",
         example=0.0)
 
     @field_validator('vehicle_type')
     def validate_vehicle_type(cls, v):
-        allowed_types = {'EV_3W', 'TATA_ACE_4W', 'BIKE_2W'}
+        allowed_types = get_vehicle_types()
         if v not in allowed_types:
-            raise ValueError(f'vehicle_type must be one of {allowed_types}')
+            raise ValueError(f"Invalid vehicle type. Must be one of: {list(allowed_types)}")
         return v
 
     class Config:

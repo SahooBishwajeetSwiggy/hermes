@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from pydantic import BaseModel, Field, field_validator, conint, confloat
+from typing import List, Optional, Dict
 from datetime import datetime, time, timezone
 import uuid
 
@@ -22,6 +22,34 @@ class TimeWindow(BaseModel):
             }
         }
 
+class WarehouseConfig(BaseModel):
+    """
+    Model for warehouse-specific configuration
+    """
+    average_speed: float = Field(10.0,
+        description="Average vehicle speed in km/h",
+        gt=0)
+    depot_index: int = Field(0,
+        description="Index of depot location",
+        ge=0)
+    enable_time_windows: bool = Field(True,
+        description="Whether to enable time window constraints")
+    service_time: int = Field(5,
+        description="Service time in minutes",
+        gt=0)
+
+    @field_validator('average_speed')
+    def validate_speed(cls, v):
+        if v <= 0:
+            raise ValueError("Average speed must be greater than 0")
+        return v
+
+    @field_validator('service_time')
+    def validate_times(cls, v):
+        if v <= 0:
+            raise ValueError("Time values must be greater than 0")
+        return v
+
 class WarehouseBase(BaseModel):
     """
     Base model for Warehouse with common attributes
@@ -41,12 +69,16 @@ class WarehouseBase(BaseModel):
     contact_number: Optional[str] = Field(None, 
         description="Contact number for the warehouse",
         example="+91-9876543210")
-    operating_hours: Optional[TimeWindow] = Field(
+    operating_hours: TimeWindow = Field(
         default=TimeWindow(
             start=time(9, 0),
             end=time(18, 0)
         ),
         description="Operating hours of the warehouse"
+    )
+    config: Optional[WarehouseConfig] = Field(
+        default=WarehouseConfig(),
+        description="Warehouse-specific configuration"
     )
 
     class Config:
@@ -60,6 +92,12 @@ class WarehouseBase(BaseModel):
                 "operating_hours": {
                     "start": "09:00",
                     "end": "18:00"
+                },
+                "config": {
+                    "average_speed": 10.0,
+                    "depot_index": 0,
+                    "enable_time_windows": True,
+                    "service_time": 5,
                 }
             }
         }
@@ -91,6 +129,7 @@ class WarehouseUpdate(BaseModel):
     longitude: Optional[float] = None
     contact_number: Optional[str] = None
     operating_hours: Optional[TimeWindow] = None
+    config: Optional[WarehouseConfig] = None
 
     class Config:
         schema_extra = {

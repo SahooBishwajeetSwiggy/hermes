@@ -17,6 +17,9 @@ async def create_warehouse(warehouse: WarehouseCreate):
     warehouse_data["updated_at"] = datetime.now(timezone.utc)
     
     result = db.insert_one("warehouses", warehouse_data)
+    
+    db.yaml_config.update_warehouse_config(result["id"], db)
+    
     return result
 
 @router.get("/", response_model=List[Warehouse])
@@ -38,11 +41,18 @@ async def update_warehouse(warehouse_id: str, warehouse: WarehouseUpdate):
     result = db.update_one("warehouses", {"id": warehouse_id}, update_data)
     if not result:
         raise HTTPException(status_code=404, detail="Warehouse not found")
+
+    if "config" in update_data or "operating_hours" in update_data:
+        db.yaml_config.update_warehouse_config(warehouse_id, db)
+    
     return result
 
 @router.delete("/{warehouse_id}")
 async def delete_warehouse(warehouse_id: str):
     success = db.delete_one("warehouses", {"id": warehouse_id})
+
     if not success:
         raise HTTPException(status_code=404, detail="Warehouse not found")
+    else:
+        db.yaml_config._delete_warehouse_config(warehouse_id)
     return {"message": "Warehouse deleted successfully"}

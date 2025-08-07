@@ -1,8 +1,9 @@
 import json
-import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
 from datetime import datetime, time
+from copy import deepcopy
+from .yaml_config import YamlConfig
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -16,6 +17,7 @@ class JsonDB:
     def __init__(self, db_path: str = "app/db/data"):
         self.db_path = Path(db_path)
         self.db_path.mkdir(parents=True, exist_ok=True)
+        self.yaml_config = YamlConfig(db_path)
     
     def _get_file_path(self, collection: str) -> Path:
         return self.db_path / f"{collection}.json"
@@ -69,5 +71,7 @@ class JsonDB:
             if all(item.get(k) == v for k, v in query.items()):
                 items.pop(i)
                 self._write_collection(collection, items)
+                if collection == "warehouses":
+                    self.yaml_config._delete_warehouse_config(item["id"])
                 return True
         return False
