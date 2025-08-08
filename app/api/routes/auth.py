@@ -105,11 +105,3 @@ async def select_warehouse(
 async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
     return current_user
 
-@router.get("/me/warehouses", response_model=List[Warehouse])
-async def get_my_warehouses(current_user: UserResponse = Depends(get_current_user)):
-    warehouses = []
-    for warehouse_id in current_user.assigned_warehouses:
-        warehouse = db.find_one("warehouses", {"id": warehouse_id})
-        if warehouse:
-            warehouses.append(warehouse)
-    return warehouses

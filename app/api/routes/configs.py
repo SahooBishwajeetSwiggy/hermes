@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from typing import Dict, List, Union
 from pathlib import Path
 
 from app.db.json_db import JsonDB
 from pydantic import BaseModel
+from app.api.auth.permissions import verify_admin, verify_admin_or_warehouse_access
+from app.api.routes.auth import get_current_user
+from app.api.models.users import UserResponse, UserRole
 
 class GlobalConfig(BaseModel):
     vehicle_types: Dict
@@ -13,21 +16,29 @@ router = APIRouter()
 db = JsonDB()
 
 @router.get("/global")
-async def get_global_config():
+async def get_global_config(_: None = Depends(verify_admin)):
     """
     Get global configuration including available vehicle types and default settings
     """
     return db.yaml_config.get_global_config()
 
 @router.get("/warehouses")
-async def get_all_warehouse_configs():
+async def get_all_warehouse_configs(current_user: UserResponse = Depends(get_current_user)):
     """
     Get configurations for all warehouses
     """
-    return db.yaml_config.get_warehouse_config()
+    configs = db.yaml_config.get_warehouse_config()
+    print(configs)
+    if current_user.role != UserRole.ADMIN:
+        # Filter configs based on user's warehouse access
+        configs = [config for config in configs if config.get("warehouse_id") in current_user.assigned_warehouses]
+    return configs
 
 @router.get("/warehouses/{warehouse_id}")
-async def get_warehouse_config(warehouse_id: str):
+async def get_warehouse_config(
+    warehouse_id: str,
+    _: None = Depends(verify_admin_or_warehouse_access)
+):
     """
     Get configuration for a specific warehouse
     """
@@ -37,7 +48,10 @@ async def get_warehouse_config(warehouse_id: str):
     return config
 
 @router.post("/warehouses/{warehouse_id}/update")
-async def update_warehouse_config(warehouse_id: str):
+async def update_warehouse_config(
+    warehouse_id: str,
+    _: None = Depends(verify_admin_or_warehouse_access)
+):
     """
     Manually trigger config update for a warehouse.
     Use this to rebuild config if it gets out of sync.
@@ -52,7 +66,10 @@ async def update_warehouse_config(warehouse_id: str):
     return config
 
 @router.put("/global", response_model=Dict)
-async def update_global_config(config: Dict[str, Dict[str, dict]] = Body(...)):
+async def update_global_config(
+    config: Dict[str, Dict[str, dict]] = Body(...),
+    _: None = Depends(verify_admin)
+):
     """
     Update the global configuration.
     Expects a simplified schema matching the YAML structure:

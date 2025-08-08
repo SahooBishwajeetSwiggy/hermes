@@ -26,7 +26,7 @@ class WarehouseConfig(BaseModel):
     """
     Model for warehouse-specific configuration
     """
-    average_speed: float = Field(10.0,
+    average_speed: int = Field(10,
         description="Average vehicle speed in km/h",
         gt=0)
     depot_index: int = Field(0,

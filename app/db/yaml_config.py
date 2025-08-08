@@ -126,7 +126,10 @@ class YamlConfig:
         # Count vehicles by type
         vehicle_counts = {}
         if db:
-            vehicles = [v for v in db.find_all("vehicles") if v["warehouse_id"] == warehouse_id]
+            vehicles = [
+                v for v in db.find_all("vehicles")
+                if v["warehouse_id"] == warehouse_id and v.get("availability_status", True)
+            ]
             for vehicle in vehicles:
                 v_type = vehicle["vehicle_type"]
                 vehicle_counts[v_type] = vehicle_counts.get(v_type, 0) + 1

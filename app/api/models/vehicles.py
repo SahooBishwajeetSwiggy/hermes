@@ -33,9 +33,9 @@ class VehicleBase(BaseModel):
         example="+91-9876543210")
     availability_status: bool = Field(True, 
         description="Whether the vehicle is currently available")
-    total_distance_today: float = Field(0.0,
+    total_distance_today: int = Field(0,
         description="Total distance covered today in meters",
-        example=0.0)
+        example=0)
 
     @field_validator('vehicle_type')
     def validate_vehicle_type(cls, v):
@@ -53,8 +53,7 @@ class VehicleBase(BaseModel):
                 "driver_name": "John Doe",
                 "driver_contact": "+91-9876543210",
                 "availability_status": True,
-                "current_capacity": 450.0,
-                "total_distance_today": 0.0
+                "total_distance_today": 0
             }
         }
 
@@ -85,8 +84,7 @@ class VehicleUpdate(BaseModel):
     driver_name: Optional[str] = None
     driver_contact: Optional[str] = None
     availability_status: Optional[bool] = None
-    current_capacity: Optional[float] = None
-    total_distance_today: Optional[float] = None
+    total_distance_today: Optional[int] = None
 
     class Config:
         schema_extra = {
