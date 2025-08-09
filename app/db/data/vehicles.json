@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Vehicle-001",
+    "vehicle_type": "EV_3W",
+    "warehouse_id": "6f62e0eb-9f5c-476b-9c8b-6c084c794c26",
+    "registration_number": "KA01AB1234",
+    "driver_name": "John Doe",
+    "driver_contact": "+91-9876543210",
+    "availability_status": true,
+    "total_distance_today": 0,
+    "id": "c4c6cb46-ad41-402c-a049-7d11b4b94817",
+    "created_at": "2025-08-07T07:55:47.842312+00:00",
+    "updated_at": "2025-08-08T07:12:06.968592+00:00"
+  },
+  {
+    "name": "Vehicle-002",
+    "vehicle_type": "BIKE_2W",
+    "warehouse_id": "8565b4a7-afb8-4eab-87a8-a676763ffbbd",
+    "registration_number": "KA01AB1234",
+    "driver_name": "John Doe",
+    "driver_contact": "+91-9876543210",
+    "availability_status": true,
+    "total_distance_today": 0,
+    "id": "916aae5a-75cc-4deb-a9e5-baaa841437e2",
+    "created_at": "2025-08-07T07:56:09.755299+00:00",
+    "updated_at": "2025-08-08T07:30:44.814907+00:00"
+  },
+  {
+    "name": "Vehicle-002",
+    "vehicle_type": "TATA_ACE_4W",
+    "warehouse_id": "8565b4a7-afb8-4eab-87a8-a676763ffbbd",
+    "registration_number": "KA01AB1234",
+    "driver_name": "John Doe",
+    "driver_contact": "+91-9876543210",
+    "availability_status": true,
+    "total_distance_today": 0,
+    "id": "85e1a38f-bc31-49dd-a544-d16039ca838f",
+    "created_at": "2025-08-08T08:25:26.615502+00:00",
+    "updated_at": "2025-08-08T08:25:26.615507+00:00"
+  }
+]

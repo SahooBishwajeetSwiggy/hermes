@@ -1,0 +1,27 @@
+[
+  {
+    "email": "user@example.com",
+    "username": "john_doe",
+    "full_name": "John Doe",
+    "password": "$2b$12$AjeB804mTI7ns/3pO7n6Au2fbSPnjtUys3KfIIdgZjkXttaM50HgK",
+    "id": "11bab636-6166-4183-9869-065bb659272a",
+    "role": "user",
+    "assigned_warehouses": [
+      "6f62e0eb-9f5c-476b-9c8b-6c084c794c26"
+    ],
+    "active_warehouse_id": null
+  },
+  {
+    "email": "admin@example.com",
+    "username": "john_doe_admin",
+    "full_name": "John Doe Admin",
+    "password": "$2b$12$RbZfDRqdn6rR71PorB2OcunjuU8Dl07Rfd9Kuc62E0E96nO6pVVmm",
+    "id": "763f83de-1691-4da6-b9ae-14b6d6ac3809",
+    "role": "admin",
+    "assigned_warehouses": [
+      "8565b4a7-afb8-4eab-87a8-a676763ffbbd",
+      "6f62e0eb-9f5c-476b-9c8b-6c084c794c26"
+    ],
+    "active_warehouse_id": "8a3e135c-2f38-499c-b2f5-eabd8c726073"
+  }
+]

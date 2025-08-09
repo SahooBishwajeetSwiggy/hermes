@@ -1,7 +1,7 @@
 data/*
 archive/*
-*/**/*.json
-*/**/*.yaml
+# */**/*.json
+# */**/*.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

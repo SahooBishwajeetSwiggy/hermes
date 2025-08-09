@@ -1,0 +1,19 @@
+vehicle_types:
+  EV_3W:
+    capacity: 450
+    max_distance: 150000
+    fixed_cost: 1650
+    cost_per_delivery: 0
+    allowed_sizes: [0, 1]
+  TATA_ACE_4W:
+    capacity: 900
+    max_distance: 300000
+    fixed_cost: 1950
+    cost_per_delivery: 0
+    allowed_sizes: [0, 1, 2]
+  BIKE_2W:
+    capacity: 20
+    max_distance: 60000
+    fixed_cost: 400
+    cost_per_delivery: 60
+    allowed_sizes: [0]
