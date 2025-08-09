@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+python-dotenv
+typing-extensions
+uuid
+pyyaml
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic[email]
+geopy
+ortools
