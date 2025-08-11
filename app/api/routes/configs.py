@@ -28,7 +28,6 @@ async def get_all_warehouse_configs(current_user: UserResponse = Depends(get_cur
     Get configurations for all warehouses
     """
     configs = db.yaml_config.get_warehouse_config()
-    print(configs)
     if current_user.role != UserRole.ADMIN:
         # Filter configs based on user's warehouse access
         configs = [config for config in configs if config.get("warehouse_id") in current_user.assigned_warehouses]

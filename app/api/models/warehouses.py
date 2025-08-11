@@ -57,6 +57,9 @@ class WarehouseBase(BaseModel):
     name: str = Field(..., 
         description="Name of the warehouse",
         example="Main Depot")
+    city: str = Field(...,
+        description="City where the warehouse is located",
+        example="Bangalore")
     address: str = Field(..., 
         description="Full address of the warehouse",
         example="123 Main St, Bangalore, Karnataka")
@@ -124,6 +127,7 @@ class WarehouseUpdate(BaseModel):
     Model for updating warehouse information
     """
     name: Optional[str] = None
+    city: Optional[str] = None
     address: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None

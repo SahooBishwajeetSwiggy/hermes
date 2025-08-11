@@ -123,6 +123,13 @@ class YamlConfig:
             new_config["working_hours"] = working_minutes
             new_config["time_config"]["depot_window"] = [0, working_minutes]
 
+        if warehouse and ("latitude" in warehouse or "longitude" in warehouse):
+            new_config["latitude"] = warehouse.get("latitude", 0)
+            new_config["longitude"] = warehouse.get("longitude", 0)
+
+        if warehouse and "city" in warehouse:
+            new_config["city"] = str(warehouse["city"])
+
         # Count vehicles by type
         vehicle_counts = {}
         if db:
@@ -145,4 +152,3 @@ class YamlConfig:
         config_path = self._get_config_path(warehouse_id)
         self._write_yaml(config_path, new_config)
         return new_config
-

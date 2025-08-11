@@ -83,7 +83,7 @@ async def update_warehouse(
         raise HTTPException(status_code=404, detail="Warehouse not found")
 
     # Update config in YAML if relevant fields changed
-    if "config" in update_data or "operating_hours" in update_data:
+    if "city" in update_data or "config" in update_data or "operating_hours" in update_data or "latitude" in update_data or "longitude" in update_data:
         db.yaml_config.update_warehouse_config(warehouse_id, db)
     
     return result
