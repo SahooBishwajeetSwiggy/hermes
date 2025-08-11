@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
 from typing import List
 import io
+import os
 from contextlib import redirect_stdout
 
 from app.api.models.routing import RoutingInput, RoutingSolutionOutput
@@ -30,8 +31,18 @@ async def solve_routing(
         raise HTTPException(status_code=404, detail="Warehouse configuration not found")
 
     try:
+        CITY_NAME = config.get("city")
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__))) 
+        OSM_PATH = os.path.join(
+            BASE_DIR, "db", "maps", f"{CITY_NAME.lower()}.osm"
+        )
+
+        GRAPHML_PATH = os.path.join(
+            BASE_DIR, "db", "maps", f"{CITY_NAME.lower()}.graphml"
+        )
+
         # Generate solver input with warehouse-specific config
-        solver_input = generate_solver_input(routing_input.dict(), config)
+        solver_input = generate_solver_input(routing_input.dict(), config, OSM_PATH, GRAPHML_PATH)
         
         # Create and solve routing model
         routing, manager, solution = create_routing_model(
