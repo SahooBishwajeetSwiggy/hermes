@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
-from app.api.routes import warehouses, vehicles, configs, auth, admin, geocoding
+from app.api.routes import warehouses, vehicles, configs, auth, admin, geocoding, routing
 
 app = FastAPI(
     title="Route Planner API",
@@ -28,6 +28,7 @@ app.include_router(warehouses.router, prefix="/api/v1/warehouses", tags=["wareho
 app.include_router(vehicles.router, prefix="/api/v1/vehicles", tags=["vehicles"])
 app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 app.include_router(geocoding.router, prefix="/api/v1/geocoding", tags=["geocoding"])
+app.include_router(routing.router, prefix="/api/v1/routing", tags=["routing"])
 
 @app.get("/")
 async def health_check():
