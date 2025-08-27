@@ -151,6 +151,7 @@ class VehicleBase(BaseModel):
     vehicle_type: str = Field(..., description="Type of vehicle (EV_3W, TATA_ACE_4W, BIKE_2W)", example="EV_3W")
     registration_number: str = Field(..., description="Vehicle registration number", example="KA01AB1234")
     max_distance: int = Field(0, description="Total distance covered today in meters", example=100000)
+    capacity: int = Field(0, description="Vehicle capacity in kg", example=1000)
 
     @field_validator('vehicle_type')
     def validate_vehicle_type(cls, v):
@@ -206,8 +207,9 @@ async def solve_routing(
         for vehicle in vehicles:
             v_type = vehicle["vehicle_type"]
             max_dist = vehicle["max_distance"]
-            
-            key = (v_type, max_dist)
+            capacity = vehicle["capacity"]
+
+            key = (v_type, max_dist, capacity)
             if key not in grouped:
                 grouped[key] = 1
             else:
@@ -221,13 +223,13 @@ async def solve_routing(
         
         grouped_vehicles = _group_vehicles(vehicles)
 
-        for (v_type, max_dist), count in grouped_vehicles.items():
+        for (v_type, max_dist, capacity), count in grouped_vehicles.items():
             static_config = VEHICLE_TYPES[v_type]
-            
-            config_key = f"{v_type}_{max_dist}"
-            
+
+            config_key = f"{v_type}_{max_dist}_{capacity}"
+
             vehicle_config[config_key] = {
-                "capacity": static_config["capacity"],
+                "capacity": capacity,
                 "max_distance": max_dist,
                 "fixed_cost": static_config["fixed_cost"],
                 "cost_per_delivery": static_config["cost_per_delivery"],
