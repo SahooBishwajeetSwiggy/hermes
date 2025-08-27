@@ -70,19 +70,29 @@ class DeliveryOutput(DeliveryBase):
     planned_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")] = Field(..., description="Planned delivery time")
 
 
+class TimelineEntry(BaseModel):
+    node_id: str = Field(..., description="Delivery ID or 'Depot'")
+    arrival: str = Field(..., description="Arrival time in format 'HH:MM (X mins)'")
+    latest: str = Field(..., description="Latest possible arrival in format 'HH:MM (X mins)'")
+    service_time: int = Field(..., description="Service time at this location in minutes")
+    travel_time_to_next: int = Field(..., description="Travel time to next location in minutes")
+
+
 class VehicleRoute(BaseModel):
-    sequence: List[str]
-    start_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")]
-    end_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")]
+    sequence: List[str] = Field(..., description="Sequence of location IDs")
+    start_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")] = Field(..., description="Route start time")
+    end_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")] = Field(..., description="Route end time")
+    latest_end_time: Annotated[str, Field(pattern=r"^\d{1,2}:\d{2}$")] = Field(..., description="Latest possible end time")
+    timeline: List[TimelineEntry] = Field(..., description="Detailed timeline of the route")
 
 
 class VehicleOutput(BaseModel):
-    vehicle_id: int
-    vehicle_type: str
-    total_load: float
-    total_distance: float
-    delivery_ids: List[str]
-    route: VehicleRoute
+    vehicle_id: int = Field(..., description="Vehicle identifier")
+    vehicle_type: str = Field(..., description="Type of vehicle")
+    total_load: float = Field(..., description="Total weight loaded")
+    total_distance: float = Field(..., description="Total distance covered")
+    delivery_ids: List[str] = Field(..., description="List of delivery IDs assigned to this vehicle")
+    route: VehicleRoute = Field(..., description="Detailed route information")
 
 
 class Parameters(BaseModel):
@@ -94,10 +104,10 @@ class Parameters(BaseModel):
 
     @field_validator('optimizing_time_limit')
     def validate_optimizing_time_limit(cls, v):
-        if v <= 5:
-            raise ValueError("Optimizing time limit is too low, please set it to more than 5 seconds.")
-        elif v > 30:
-            raise ValueError("Optimizing time limit is too high, please set it to 30 seconds or less.")
+        if v <= 15:
+            raise ValueError("Optimizing time limit is too low, please set it to more than 15 seconds.")
+        elif v > 40:
+            raise ValueError("Optimizing time limit is too high, please set it to 40 seconds or less.")
         return v
 
 class TimeWindow(BaseModel):
@@ -246,17 +256,17 @@ async def solve_routing(
 
     try:
         CITY_NAME = warehouse["city"]
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        BASE_DIR = os.path.dirname(__file__)
 
         if solver_params['use_haversine']:
             OSM_PATH = None
             GRAPHML_PATH = None
         else:
             OSM_PATH = os.path.join(
-                BASE_DIR, "db", "maps", f"{CITY_NAME.lower()}.osm"
+                BASE_DIR, "maps", f"{CITY_NAME.lower()}.osm"
             )
             GRAPHML_PATH = os.path.join(
-                BASE_DIR, "db", "maps", f"{CITY_NAME.lower()}.graphml"
+                BASE_DIR, "maps", f"{CITY_NAME.lower()}.graphml"
             )
 
         solver_input = generate_solver_input(deliveries, config, solver_params["current_time"], OSM_PATH, GRAPHML_PATH, use_haversine=solver_params['use_haversine'])
@@ -385,21 +395,38 @@ def format_solution_output(routing, manager, solution, solver_input, data, confi
             "route": {
                 "sequence": [],
                 "start_time": None,
-                "end_time": None
+                "end_time": None,
+                "latest_end_time": None,
+                "timeline": []
             }
         }
 
         while not routing.IsEnd(index):
-            node = manager.IndexToNode(index)
+            node_index = manager.IndexToNode(index)
             next_index = solution.Value(routing.NextVar(index))
-            
-            if node != config["depot_index"]:
-                location_id = solver_input["locations"][node]
-                delivery = next(d for d in data["deliveries"] if d["loc"] == location_id)
-                
-                time_var = time_dimension.CumulVar(index)
-                planned_time = minutes_to_time_str(solution.Min(time_var), config)
+            next_node = manager.IndexToNode(next_index)
 
+            time_var = time_dimension.CumulVar(index)
+            min_time = solution.Min(time_var)
+            max_time = solution.Max(time_var)
+            
+            service_time = config["service_time"] if node_index != config["depot_index"] else 0
+            travel_time = solver_input["time_matrix"][node_index][next_node] if not routing.IsEnd(next_index) else 0
+            
+            node_info = {
+                "node_id": solver_input["delivery_ids"][node_index],
+                "arrival": f"{minutes_to_time_str(min_time, config)} ({min_time} mins)",
+                "latest": f"{minutes_to_time_str(max_time, config)} ({max_time} mins)",
+                "service_time": service_time,
+                "travel_time_to_next": travel_time
+            }
+            stats["route"]["timeline"].append(node_info)
+
+            if not routing.IsEnd(next_index):
+                location_id = solver_input["locations"][next_node]  # Changed from node_index to next_node
+                delivery = next(d for d in data["deliveries"] if d["id"] == solver_input["delivery_ids"][next_node])
+
+                planned_time = minutes_to_time_str(min_time + service_time, config)
                 delivery_output = {
                     **delivery,
                     "vehicle_id": vehicle_id,
@@ -408,23 +435,36 @@ def format_solution_output(routing, manager, solution, solver_input, data, confi
                 }
                 deliveries.append(delivery_output)
                 
-                stats["total_load"] += int(delivery["wt"])
-                stats["delivery_ids"].append(delivery["id"])
+                stats["total_load"] += solver_input["demands"][next_node]
+                stats["delivery_ids"].append(solver_input["delivery_ids"][next_node])
                 stats["route"]["sequence"].append(location_id)
-            
-            stats["total_distance"] += routing.GetArcCostForVehicle(
-                index, next_index, vehicle_id
-            )
+                
+            stats["total_distance"] += solver_input["distance_matrix"][node_index][next_node]
             index = next_index
 
         if stats["delivery_ids"]:
+            end_time_var = time_dimension.CumulVar(index)
+            end_min = solution.Min(end_time_var)
+            end_max = solution.Max(end_time_var)
+            
+            final_node_info = {
+                "node_id": "Depot",
+                "arrival": f"{minutes_to_time_str(end_min, config)} ({end_min} mins)",
+                "latest": f"{minutes_to_time_str(end_max, config)} ({end_max} mins)",
+                "service_time": 0,
+                "travel_time_to_next": 0
+            }
+            stats["route"]["timeline"].append(final_node_info)
+            
             start_var = time_dimension.CumulVar(routing.Start(vehicle_id))
-            end_var = time_dimension.CumulVar(index)
             stats["route"]["start_time"] = minutes_to_time_str(
                 solution.Min(start_var), config
             )
             stats["route"]["end_time"] = minutes_to_time_str(
-                solution.Max(end_var), config
+                end_min, config
+            )
+            stats["route"]["latest_end_time"] = minutes_to_time_str(
+                end_max, config
             )
             vehicles.append(stats)
 
@@ -531,7 +571,7 @@ def calculate_promised_time_deltas(locations, current_time, promised_times, conf
                 promised_mins = convert_time_to_minutes(promised_time)
                 if promised_mins is not None:
                     delta = promised_mins - curr_time_mins
-                    promised_time_deltas[j] = max(0, delta)
+                    promised_time_deltas[j] = delta
             except (IndexError, ValueError):
                 continue
     
@@ -566,7 +606,7 @@ def generate_solver_input(deliveries, config, current_time, OSM_PATH, GRAPHML_PA
         if start_offset is not None and end_offset is not None:
             time_windows.append((start_offset, end_offset))
         else:
-            time_windows.append((0, config["working_hours"]))
+            time_windows.append(config["time_config"]["depot_window"])
 
     num_locations = len(locations)
     
@@ -714,73 +754,81 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
             travel_time = time_matrix[from_node][to_node]
-            service_time = config["service_time"] if to_node != config["depot_index"] else 0
-            return travel_time + service_time
+            return travel_time
         except Exception:
             return 0
 
     time_callback_index = routing.RegisterTransitCallback(time_callback)
     routing.AddDimension(
         time_callback_index,
-        config["service_time"],  # allow waiting time
+        config["service_time"],
         config["working_hours"],  # maximum time per vehicle
-        False,  # Don't force start cumul to zero since we have time windows
+        True,
         "Time"
     )
+
+    time_dimension = routing.GetDimensionOrDie("Time")
     
-    # time_dimension = routing.GetDimensionOrDie("Time")
-    
-    # # Add time window constraints
-    # if config["enable_time_windows"] and time_windows:
-    #     # Add time window constraints for each location except depot
-    #     for location_idx, time_window in enumerate(time_windows):
-    #         if location_idx == config["depot_index"]:
-    #             continue
-    #         index = manager.NodeToIndex(location_idx)
-    #         time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
+    # Add time window constraints
+    if config["enable_time_windows"] and time_windows:
+        # Add time window constraints for each location except depot
+        for location_idx, time_window in enumerate(time_windows):
+            if location_idx == config["depot_index"]:
+                continue
+            index = manager.NodeToIndex(location_idx)
+            time_dimension.CumulVar(index).SetRange(time_window[0], time_window[1])
         
-    #     # Add time window constraints for each vehicle start node (depot)
-    #     depot_time_window = time_windows[config["depot_index"]]
-    #     for vehicle_id in range(num_vehicles):
-    #         index = routing.Start(vehicle_id)
-    #         time_dimension.CumulVar(index).SetRange(
-    #             depot_time_window[0],
-    #             depot_time_window[1]
-    #         )
+        # Add time window constraints for each vehicle start node (depot)
+        depot_time_window = time_windows[config["depot_index"]]
+        for vehicle_id in range(num_vehicles):
+            index = routing.Start(vehicle_id)
+            time_dimension.CumulVar(index).SetRange(
+                depot_time_window[0],
+                depot_time_window[1]
+            )
             
-    #     # Minimize the time span of each vehicle's route
-    #     for vehicle_id in range(num_vehicles):
-    #         routing.AddVariableMinimizedByFinalizer(
-    #             time_dimension.CumulVar(routing.Start(vehicle_id))
-    #         )
-    #         routing.AddVariableMinimizedByFinalizer(
-    #             time_dimension.CumulVar(routing.End(vehicle_id))
-    #         )
+        # Minimize the time span of each vehicle's route
+        for vehicle_id in range(num_vehicles):
+            routing.AddVariableMinimizedByFinalizer(
+                time_dimension.CumulVar(routing.Start(vehicle_id))
+            )
+            routing.AddVariableMinimizedByFinalizer(
+                time_dimension.CumulVar(routing.End(vehicle_id))
+            )
 
     # 5. Optional Deliveries (with penalty for dropping orders)
     # Calculate penalty based on order amount and promised time
-
     penalties = {}
-    for node in range(1, len(distance_matrix)):
-        order_amount = amounts[node]
-        base_penalty = min(250, int(order_amount * PROFIT_MARGIN_PERCENT / 100))
-        
-        travel_time = time_matrix[config['depot_index']][node]
-        buffered_travel_time = int(travel_time * BUFFER_MULTIPLIER)
-        promised_time_delta = promised_time_deltas[node]
-        
-        if promised_time_delta <= buffered_travel_time:
-            time_difference = buffered_travel_time - promised_time_delta
-            num_intervals = time_difference // TIME_INTERVAL_MINUTES + 1
+
+    # If enforce_all_deliveries is True, set extremely high penalties
+    if enforce_all:
+        for node in range(1, len(distance_matrix)):
+            penalty = 1000000000    # Very high penalty to effectively force inclusion
+            penalties[node] = penalty
+            routing.AddDisjunction([manager.NodeToIndex(node)], penalty)
+
+    else:
+        for node in range(1, len(distance_matrix)):
+            order_amount = amounts[node]
+            base_penalty = min(250, int(order_amount * PROFIT_MARGIN_PERCENT / 100))
             
-            urgency_penalty = PENALTY_PER_INTERVAL * (2 ** num_intervals)
-            penalty = base_penalty + urgency_penalty
-        else:
-            penalty = base_penalty
+            travel_time = time_matrix[config['depot_index']][node]
+            buffered_travel_time = int(travel_time * BUFFER_MULTIPLIER)
+            promised_time_delta = promised_time_deltas[node]
+            
+            if promised_time_delta <= buffered_travel_time:
+                time_difference = buffered_travel_time - promised_time_delta
+                num_intervals = time_difference // TIME_INTERVAL_MINUTES + 1
+                
+                urgency_penalty = PENALTY_PER_INTERVAL * (2 ** num_intervals)
+                penalty = base_penalty + urgency_penalty
 
-        penalties[node] = penalty
+            else:
+                penalty = base_penalty
 
-        routing.AddDisjunction([manager.NodeToIndex(node)], penalty)
+            penalties[node] = penalty
+
+            routing.AddDisjunction([manager.NodeToIndex(node)], penalty)
 
     # Solver settings
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
@@ -788,18 +836,14 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     search_parameters.time_limit.seconds = optimizing_time_limit
 
-    # If enforce_all_deliveries is True, set extremely high penalties
-    if enforce_all:
-        for node in range(1, len(distance_matrix)):
-            node_index = manager.NodeToIndex(node)
-            routing.AddDisjunction([node_index], 1000000000)  # Very high penalty to effectively force inclusion
 
     solution = routing.SolveWithParameters(search_parameters)
     
     solution_report = ""
     if solution:
+        time_dimension = routing.GetDimensionOrDie("Time")
         solution_report += ("\n=== SOLUTION ANALYSIS ===\n")
-        
+
         # Track dropped nodes
         dropped_nodes = []
         served_nodes = []
@@ -810,6 +854,7 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
                 continue
             
             if solution.Value(routing.NextVar(index)) == index:
+                depot_index = config["depot_index"]
                 delivery_id = delivery_ids[node]
                 dropped_nodes.append(delivery_id)
                 solution_report += (f"\nOrder {delivery_id} was DROPPED:\n")
@@ -821,7 +866,6 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
                     solution_report += (f"    Travel Time from Depot: {time_matrix[depot_index][node]} minutes\n")
                 
                 # Calculate distance metrics
-                depot_index = config["depot_index"]
                 depot_to_node = distance_matrix[depot_index][node]
                 node_to_depot = distance_matrix[node][depot_index]
                 total_distance = depot_to_node + node_to_depot
@@ -933,23 +977,31 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
             index = routing.Start(vehicle_id)
             route_load = 0
             route_distance = 0
-            
+
             if solution.Value(routing.NextVar(index)) != routing.End(vehicle_id):
                 solution_report += (f"\nVehicle {vehicle_id} ({vehicle_type_list[vehicle_id]}):\n")
                 route_ids = []
+
                 while not routing.IsEnd(index):
                     node_index = manager.IndexToNode(index)
                     next_index = solution.Value(routing.NextVar(index))
                     next_node = manager.IndexToNode(next_index)
                     if not routing.IsEnd(next_index):
                         route_load += demands[next_node]
-                        route_distance += distance_matrix[node_index][next_node]
                         route_ids.append(delivery_ids[next_node])
+                        
+                    route_distance += distance_matrix[node_index][next_node]
                     index = next_index
-                
+
+                time_var = time_dimension.CumulVar(routing.End(vehicle_id))
+                route_time = solution.Min(time_var)
+
                 solution_report += (f"  Route: {' > '.join(route_ids)}\n")
                 solution_report += (f"  Route Load: {route_load}/{vehicle_capacities[vehicle_id]}\n")
                 solution_report += (f"  Route Distance: {route_distance}/{vehicle_distances[vehicle_id]}\n")
-    
-    print(solution_report)
+                solution_report += (f"  Route Time: {route_time}/{config['working_hours']}\n")
+
+    if dropped_nodes:
+        solution_report += f"If some orders were dropped but you wanted to include them or you have chosen to enforce all deliveries, please verify the capacity of all the vehicles and allocate more resources accordingly.\n"
+
     return routing, manager, solution, solution_report, dropped_nodes
