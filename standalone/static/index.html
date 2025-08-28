@@ -1,0 +1,4966 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Logistics Optimization Tool</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn-uicons.flaticon.com/2.2.0/uicons-bold-rounded/css/uicons-bold-rounded.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn-uicons.flaticon.com/2.2.0/uicons-solid-rounded/css/uicons-solid-rounded.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn-uicons.flaticon.com/2.2.0/uicons-regular-rounded/css/uicons-regular-rounded.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding-top: 20px;
+        padding-left: 80px;
+        padding-right: 80px;
+      }
+      .container-fluid {
+        width: 100%;
+        max-width: 1400px;
+        padding: 5px;
+      }
+
+      :root {
+        --primary-teal: #58b8a5;
+        --dark-charcoal: #34495e;
+      }
+
+      .app-header {
+        font-family: "Inter", sans-serif;
+        width: 100%;
+        color: grey;
+        text-align: center;
+        padding: 5px 0;
+      }
+
+      .top-buttons-container {
+        display: none;
+      }
+
+      .fixed-action-buttons {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1040;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .fixed-action-buttons .btn {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background-color: var(--primary-teal);
+        color: white;
+        border: none;
+      }
+
+      .fixed-action-buttons .btn:hover {
+        background-color: #16a085;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .fixed-action-buttons .btn i.fi {
+        line-height: 1;
+        vertical-align: middle;
+      }
+
+      .left-fixed-buttons {
+        left: 20px;
+      }
+
+      .right-fixed-buttons {
+        right: 20px;
+      }
+
+      .main-content-block {
+        background-color: var(--primary-teal);
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        margin-bottom: 40px;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        position: relative;
+        width: 100%;
+      }
+
+      .map-block {
+        min-height: 600px;
+      }
+
+      .trip-summary-block {
+        padding-bottom: 5px;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+        border-radius: 20px;
+        box-shadow: none;
+        min-height: 600px;
+        width: 1400px;
+      }
+
+      .inner-content-area {
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 5px;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        color: #333;
+        width: 100%;
+      }
+      .inner-content-area h5 {
+        color: #343a40;
+        margin-bottom: 15px;
+        font-weight: 700;
+      }
+
+      .summary-card {
+        margin-bottom: 10px;
+        box-shadow: none;
+        border: 1px solid #ddd;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+      }
+      .summary-card .card-body {
+        padding: 5px;
+      }
+      .summary-card .card-title {
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
+      .summary-card .display-4 {
+        font-size: 2em;
+        font-weight: 700;
+        margin-bottom: 5px;
+      }
+      .table-responsive {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        margin-top: 15px;
+      }
+      .table thead th {
+        background-color: #e9ecef;
+        font-weight: 600;
+        color: #495057;
+      }
+      .table tbody tr:hover {
+        background-color: #f2f4f6;
+      }
+
+      .trip-selector {
+        position: absolute;
+        top: 25px;
+        right: 25px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        max-width: 200px;
+      }
+
+      .breach-selector {
+        position: absolute;
+        top: 25px;
+        left: 25px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        max-width: 200px;
+      }
+
+      /* NEW: Style for the product filter container */
+      .product-filter {
+        position: absolute;
+        top: 330px; /* Adjust this value to position it correctly below the trip selector */
+        right: 25px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        max-width: 200px;
+      }
+
+      .optimization-progress-container {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        max-width: 400px;
+        z-index: 1001;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        display: none;
+      }
+      .optimization-progress-container .progress {
+        height: 25px;
+        margin-bottom: 5px;
+      }
+      .optimization-progress-container .progress-bar {
+        font-size: 0.8em;
+      }
+      .optimization-progress-container .text-muted {
+        font-size: 0.8em;
+      }
+
+      .modal-header {
+        background-color: var(--primary-teal) !important;
+        color: white;
+        font-weight: bold;
+      }
+      .modal-header .btn-close-white {
+        filter: invert(1);
+      }
+
+      .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1070;
+      }
+      .toast {
+        border-radius: 0.5rem;
+        opacity: 0.95;
+      }
+      .toast-header {
+        font-weight: bold;
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="app-header">TEZZ ROUTE PLANNER - TEZZ</h1>
+    <div class="container-fluid">
+      <div class="fixed-action-buttons left-fixed-buttons">
+        <button
+          id="uploadBillsTriggerBtn"
+          type="button"
+          class="btn"
+          data-bs-toggle="modal"
+          data-bs-target="#uploadBillsModal"
+          title="Upload Bills"
+        >
+          <i class="fi fi-br-cloud-upload"></i>
+        </button>
+        <button
+          type="button"
+          class="btn"
+          data-bs-toggle="modal"
+          data-bs-target="#configModal"
+          title="Configuration"
+        >
+          <i class="fi fi-br-settings"></i>
+        </button>
+        <button
+          id="planDoneBtn"
+          type="button"
+          class="btn"
+          style="display: none"
+          title="Finalize and Sequence Routes"
+        >
+          <i class="fi fi-br-route"></i>
+        </button>
+      </div>
+
+      <div class="fixed-action-buttons right-fixed-buttons">
+        <button
+          id="downloadAllocatedBtn"
+          class="btn"
+          style="display: none"
+          title="Download Allocated Bills"
+        >
+          <i class="fi fi-sr-download"></i>
+        </button>
+        <button
+          id="downloadUnallocatedBtn"
+          class="btn"
+          style="display: none"
+          title="Download Unallocated Bills"
+        >
+          <i class="fi fi-rr-vote-nay"></i>
+        </button>
+        <button
+          id="downloadTripsBtn"
+          class="btn"
+          style="display: none"
+          title="Download Plan Summary"
+        >
+          <i class="fi fi-rr-document-signed"></i>
+        </button>
+      </div>
+
+      <div
+        class="modal fade"
+        id="uploadBillsModal"
+        tabindex="-1"
+        aria-labelledby="uploadBillsModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-md modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="uploadBillsModalLabel">
+                Upload Bills Data
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <form id="billsForm">
+                <div class="mb-3">
+                  <label for="billsFile" class="form-label visually-hidden"
+                    >Bills CSV File</label
+                  >
+                  <input
+                    class="form-control form-control-sm"
+                    type="file"
+                    id="billsFile"
+                    accept=".csv"
+                    required
+                  />
+                </div>
+                <button type="submit" class="btn btn-light btn-sm w-100">
+                  Upload Bills
+                </button>
+              </form>
+              <div id="billsUploadStatus" class="mt-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content-block map-block">
+        <div id="map"></div>
+        <div id="loadingOverlay" class="loading-overlay" style="display: none">
+          <div class="spinner-border text-info" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="text-white mt-2">Processing...</p>
+        </div>
+
+        <div class="trip-selector" id="tripSelector" style="display: none">
+          <label for="tripDropdown" class="form-label">Select Trip:</label>
+          <select id="tripDropdown" class="form-select form-select-sm mb-2">
+            <option value="">-- Show All Trips --</option>
+          </select>
+          <button
+            id="showAllTripsBtn"
+            class="btn btn-sm btn-secondary w-100 mb-2"
+          >
+            Show All Trips
+          </button>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showMarkers"
+              checked
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showMarkers"
+              >Markers</label
+            >
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showPolygons"
+              checked
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showPolygons"
+              >Polygons</label
+            >
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showTourNames"
+              checked
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showTourNames"
+              >Names</label
+            >
+          </div>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showDirections"
+              checked
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showDirections"
+              >Directions</label
+            >
+          </div>
+          <div class="form-check mt-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="toggleMapStyle"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="toggleMapStyle"
+              >Dark/Minimal Map</label
+            >
+          </div>
+
+          <div class="form-check mt-2">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showIneligibleBills"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showIneligibleBills"
+              >Ineligible Bills</label
+            >
+          </div>
+
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="showUnallocatedBills"
+              checked
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="showUnallocatedBills"
+              >Unallocated Bills</label
+            >
+          </div>
+        </div>
+
+        <div
+          class="product-filter mt-2"
+          id="productFilters"
+          style="display: none"
+        >
+          <h6 style="color: black">Product Filters:</h6>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_1L_Oil_lt_3Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_1L_Oil_lt_3Qty"
+              >1L Oil &lt; 3 Qty</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_1L_Oil_lt_5Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_1L_Oil_lt_5Qty"
+              >1L Oil &lt; 5 Qty</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_1L_Oil_gt_5Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_1L_Oil_gt_5Qty"
+              >1L Oil &gt; 5 Qty</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_50Kg_Bag_lt_3Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_50Kg_Bag_lt_3Qty"
+              >50Kg Bag &lt; 3 Qty</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_50Kg_Bag_lt_5Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_50Kg_Bag_lt_5Qty"
+              >50Kg Bag &lt; 5 Qty</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input product-filter-checkbox"
+              type="checkbox"
+              id="filter_50Kg_Bag_gt_5Qty"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_50Kg_Bag_gt_5Qty"
+              >50Kg Bag &gt; 5 Qty</label
+            >
+          </div>
+        </div>
+
+        <div
+          class="breach-selector mt-2"
+          id="breachFilters"
+          style="display: none"
+        >
+          <h6 style="color: black">Breach Status:</h6>
+          <div class="form-check">
+            <input
+              class="form-check-input breach-filter-checkbox"
+              type="checkbox"
+              id="filter_Breach_lt_1hr"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_Breach_lt_1hr"
+              >Breach &lt; 1hr</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input breach-filter-checkbox"
+              type="checkbox"
+              id="filter_Breach_lt_2hr"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_Breach_lt_2hr"
+              >Breach &lt; 2hr</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input breach-filter-checkbox"
+              type="checkbox"
+              id="filter_Breach_lt_3hr"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_Breach_lt_3hr"
+              >Breach &lt; 3hr</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input breach-filter-checkbox"
+              type="checkbox"
+              id="filter_Breach_gt_3hr"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_Breach_gt_3hr"
+              >Breach &gt; 3hr</label
+            >
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input breach-filter-checkbox"
+              type="checkbox"
+              id="filter_Already_Breached"
+            />
+            <label
+              class="form-check-label"
+              style="color: black"
+              for="filter_Already_Breached"
+              >Already Breached</label
+            >
+          </div>
+        </div>
+
+        <div id="optimizationProgress" class="optimization-progress-container">
+          <div class="progress">
+            <div
+              id="optimizationProgressBar"
+              class="progress-bar progress-bar-striped progress-bar-animated"
+              role="progressbar"
+              style="width: 0%"
+              aria-valuenow="0"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            ></div>
+          </div>
+          <div
+            id="optimizationStatus"
+            class="text-center fw-bold text-muted"
+          ></div>
+        </div>
+      </div>
+
+      <div class="main-content-block trip-summary-block">
+        <div class="inner-content-area">
+          <h5 class="text-center mb-3">Optimization Overview</h5>
+          <div id="summaryContainer">
+            <p class="text-muted text-center">
+              Run optimization to see overall summary here.
+            </p>
+          </div>
+
+          <h5 class="text-center mt-4 mb-3">Trip Details</h5>
+          <div id="tripStatsContainer">
+            <p class="text-muted text-center">
+              Run optimization to see trip statistics here.
+            </p>
+          </div>
+
+          <h5 class="text-center mt-4 mb-3">Unallocated Deliveries</h5>
+          <div id="unallocatedBillsContainer">
+            <p class="text-muted text-center">
+              No unallocated bills data available. Run optimization to see
+              results.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="configModal"
+      tabindex="-1"
+      aria-labelledby="configModalLabel"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+      >
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 id="configModalLabel">Configuration</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div
+              class="form-check form-switch d-flex justify-content-between align-items-center mb-3"
+            >
+              <label class="form-check-label h5" for="modeToggle"
+                >Automatic / Manual</label
+              >
+              <input class="form-check-input" type="checkbox" id="modeToggle" />
+            </div>
+            <h5 class="mb-3">Vehicle Configuration</h5>
+            <div id="vehicleConfigContainer">
+              <p class="text-muted">Add vehicle configurations below.</p>
+              <div class="table-responsive">
+                <table
+                  class="table table-bordered table-striped"
+                  id="vehicleConfigTable"
+                >
+                  <thead>
+                    <tr>
+                      <th>Vehicle Type</th>
+                      <th>Capacity (kg)</th>
+                      <th>Trip Distance (km)</th>
+                      <th>Min Bills</th>
+                      <th>Max Bills</th>
+                      <th>Available</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          value="Truck"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-kg-input"
+                          value="800"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-distance-input"
+                          value="30"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="7"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="14"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm available-count-input"
+                          value="0"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-danger remove-vehicle">
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          value="EV"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-kg-input"
+                          value="450"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-distance-input"
+                          value="30"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="5"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="12"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm available-count-input"
+                          value="0"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-danger remove-vehicle">
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input
+                          type="text"
+                          class="form-control form-control-sm"
+                          value="Bike"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-kg-input"
+                          value="100"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm trip-distance-input"
+                          value="30"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="3"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm"
+                          value="5"
+                          min="1"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm available-count-input"
+                          value="0"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-danger remove-vehicle">
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button id="addVehicleBtn" class="btn btn-sm btn-secondary mt-3">
+                Add Vehicle Type
+              </button>
+            </div>
+
+            <!-- ============================= -->
+            <!--         BISHWA'S CODE         -->
+            <!-- ============================= -->
+
+            <hr class="my-4" />
+
+            <h5 class="mb-3">Solver Parameters</h5>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="warehouseStartTime" class="form-label"
+                    >Warehouse Start Time</label
+                  >
+                  <input
+                    type="time"
+                    class="form-control form-control-sm"
+                    id="warehouseStartTime"
+                    value="08:00"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="warehouseEndTime" class="form-label"
+                    >Warehouse End Time</label
+                  >
+                  <input
+                    type="time"
+                    class="form-control form-control-sm"
+                    id="warehouseEndTime"
+                    value="18:00"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="tripStartTime" class="form-label"
+                    >Trip Start Time</label
+                  >
+                  <input
+                    type="time"
+                    class="form-control form-control-sm"
+                    id="tripStartTime"
+                    value="08:00"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="serviceTime" class="form-label"
+                    >Service Time (minutes)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="serviceTime"
+                    value="5"
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="avgSpeed" class="form-label"
+                    >Average Speed (km/h)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="avgSpeed"
+                    value="15"
+                    min="5"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="optimizingTimeLimit" class="form-label"
+                    >Optimization Time Limit (seconds)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="optimizingTimeLimit"
+                    value="20"
+                    min="15"
+                    max="40"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="form-check mt-4">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="useHaversine"
+                    checked
+                  />
+                  <label class="form-check-label" for="useHaversine"
+                    >Use Haversine Distance (Faster but Slightly Inaccurate
+                    Distance Calculation)</label
+                  >
+                </div>
+                <div class="form-check">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="enforceAllDeliveries"
+                  />
+                  <label class="form-check-label" for="enforceAllDeliveries"
+                    >Enforce All Deliveries (Do Not Skip Any Order)</label
+                  >
+                </div>
+                <div class="form-check">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="enableTimeWindows"
+                    checked
+                  />
+                  <label class="form-check-label" for="enableTimeWindows"
+                    >Enable Time Windows (Restrict Deliveries to Specified Time
+                    Slots)</label
+                  >
+                </div>
+                <div class="form-check">
+                  <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="useCurrentTime"
+                    checked
+                  />
+                  <label class="form-check-label" for="useCurrentTime"
+                    >Use Current Time for Trip Start</label
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- ============================= -->
+            <!--         BISHWA'S CODE         -->
+            <!-- ============================= -->
+
+            <hr class="my-4" />
+
+            <h5 class="mb-3">Optimization Filters</h5>
+            <div class="mb-4">
+              <h6 class="fw-bold">Select Bill Stages for Optimization</h6>
+              <div id="dispositionCheckboxes" class="row"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button id="saveAndRunBtn" class="btn btn-primary">
+              Save & Run Optimization
+            </button>
+          </div>
+          <div id="vehicleSaveStatus" class="mt-2 text-center mb-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap&libraries=geometry"
+      async
+      defer
+    ></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const BREACH_COLORS = {
+        "Breach in <1hr": "#FF0000", // Red
+        "Breach in <2hr": "#FFA500", // Orange
+        "Breach in <3hr": "#008000", // Green
+        "Breach >3hr": "#008000", // Green
+        "Already Breached": "#0000FF", // Blue
+      };
+
+      let map;
+      let infoWindow;
+      let currentMarkers = [];
+      let allTripStats = [];
+      let currentPolylines = [];
+      let currentTripPolygonObjects = [];
+      let currentTourNameLabels = [];
+      let tripRoutes = {};
+      let allAllocatedBillsData = [];
+      let allUnallocatedBillsData = [];
+      let allIneligibleBillsData = [];
+      let billsAtSameLocation = {};
+      let billsByRetailer = {};
+      let vehicleConfiguration = [];
+      let currentBillsData = null;
+      let currentBillsHeaders = [];
+      let startTimeForLogging = null;
+      let selectedDispositions = [];
+      let allBills = [];
+
+      const TRIP_COLORS = [
+        { main: "#00008B", light: "#00008B", name: "DarkBlue" },
+        { main: "#8B0000", light: "#8B0000", name: "DarkRed" },
+        { main: "#006400", light: "#006400", name: "DarkGreen" },
+        { main: "#4B0082", light: "#4B0082", name: "Indigo" },
+        { main: "#800000", light: "#800000", name: "Maroon" },
+        { main: "#2F4F4F", light: "#2F4F4F", name: "DarkSlateGray" },
+        { main: "#191970", light: "#191970", name: "MidnightBlue" },
+        { main: "#8B4513", light: "#8B4513", name: "SaddleBrown" },
+        { main: "#483D8B", light: "#483D8B", name: "DarkSlateBlue" },
+        { main: "#A52A2A", light: "#A52A2A", name: "Brown" },
+        { main: "#D2691E", light: "#D2691E", name: "Chocolate" },
+        { main: "#5F9EA0", light: "#5F9EA0", name: "CadetBlue" },
+        { main: "#6A5ACD", light: "#6A5ACD", name: "SlateBlue" },
+        { main: "#556B2F", light: "#556B2F", name: "DarkOliveGreen" },
+        { main: "#808000", light: "#808000", name: "Olive" },
+        { main: "#CD5C5C", light: "#CD5C5C", name: "IndianRed" },
+        { main: "#4682B4", light: "#4682B4", name: "SteelBlue" },
+        { main: "#9ACD32", light: "#9ACD32", name: "YellowGreen" },
+        { main: "#DAA520", light: "#DAA520", name: "Goldenrod" },
+        { main: "#B0C4DE", light: "#B0C4DE", name: "LightSteelBlue" },
+      ];
+
+      const LIGHT_MAP_STYLE = [
+        {
+          featureType: "road.highway",
+          elementType: "geometry",
+          stylers: [
+            { color: "#CF696E" }, // A slightly darker color specifically for highways
+          ],
+        },
+        {
+          featureType: "transit.line",
+          stylers: [
+            { color: "#CF696E" },
+            { weight: 2 }, // This will correctly color only the tracks
+          ],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.fill",
+          stylers: [
+            { color: "#555555" }, // Makes road names a darker gray
+          ],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.text.stroke",
+          stylers: [
+            { color: "#f0f2f5" }, // A light background stroke for better readability
+            { weight: 2 },
+          ],
+        },
+      ];
+      const DARK_MINIMAL_MAP_STYLE = [
+        {
+          featureType: "poi",
+          elementType: "labels.icon",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "poi",
+          elementType: "labels.text",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "road",
+          elementType: "labels.icon",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "road",
+          elementType: "geometry",
+          stylers: [{ color: "#333333" }],
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [{ color: "#111111" }],
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "labels.icon",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "administrative",
+          elementType: "geometry",
+          stylers: [{ visibility: "off" }],
+        },
+        {
+          featureType: "administrative",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#aaaaaa" }],
+        },
+        { elementType: "labels.text.stroke", stylers: [{ visibility: "off" }] },
+        {
+          featureType: "road",
+          elementType: "labels.text",
+          stylers: [{ visibility: "on" }, { color: "#ffffff" }],
+        },
+        {
+          featureType: "transit",
+          elementType: "labels.text.fill",
+          stylers: [{ color: "#bbbbbb" }],
+        },
+      ];
+
+      function showLoader() {
+        document.getElementById("loadingOverlay").style.display = "flex";
+      }
+
+      function hideLoader() {
+        document.getElementById("loadingOverlay").style.display = "none";
+      }
+      function initMap() {
+        if (typeof google === "undefined" || !google.maps) {
+          console.error("Google Maps API not loaded or not ready");
+          document.getElementById("map").innerHTML =
+            '<div class="alert alert-danger text-center">Google Maps failed to load. Please check your API key and network connection.</div>';
+          return;
+        }
+        const defaultCenter = { lat: 12.9716, lng: 77.5946 };
+        map = new google.maps.Map(document.getElementById("map"), {
+          center: defaultCenter,
+          zoom: 14,
+          mapTypeControl: true,
+          mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HIDDEN,
+          },
+          streetViewControl: true,
+          streetViewControlOptions: {
+            style: google.maps.MapTypeControlStyle.HIDDEN,
+          },
+          fullscreenControl: true,
+          fullscreenControlOptions: {
+            position: google.maps.ControlPosition.LEFT_BOTTOM,
+          },
+          styles: [
+            {
+              featureType: "poi",
+              stylers: [{ visibility: "off" }],
+            },
+          ],
+        });
+        infoWindow = new google.maps.InfoWindow();
+
+        // Call your drag-select function and other map-specific setups here
+        enableDragSelect();
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        const uploadBillsModalElement =
+          document.getElementById("uploadBillsModal");
+        const uploadBillsModal = new bootstrap.Modal(uploadBillsModalElement);
+        uploadBillsModal.show();
+        document
+          .getElementById("showDirections")
+          .addEventListener("change", toggleMapVisibility);
+        document
+          .getElementById("planDoneBtn")
+          .addEventListener("click", finalizeAndSequenceRoutes);
+        document
+          .getElementById("billsForm")
+          .addEventListener("submit", handleBillsUpload);
+        document
+          .getElementById("saveAndRunBtn")
+          .addEventListener("click", saveAndRunOptimization);
+        document
+          .getElementById("addVehicleBtn")
+          .addEventListener("click", addVehicleRow);
+        document.querySelectorAll(".remove-vehicle").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            this.closest("tr").remove();
+          });
+        });
+
+        document
+          .getElementById("tripDropdown")
+          .addEventListener("change", handleTripSelection);
+        document
+          .getElementById("showAllTripsBtn")
+          .addEventListener("click", showAllTrips);
+        document
+          .getElementById("downloadAllocatedBtn")
+          .addEventListener("click", downloadAllocatedBills);
+        document
+          .getElementById("downloadUnallocatedBtn")
+          .addEventListener("click", downloadUnallocatedBills);
+        document
+          .getElementById("downloadTripsBtn")
+          .addEventListener("click", downloadTripStatistics);
+
+        document
+          .getElementById("showMarkers")
+          .addEventListener("change", toggleMapVisibility);
+        document
+          .getElementById("showPolygons")
+          .addEventListener("change", toggleMapVisibility);
+        document
+          .getElementById("showTourNames")
+          .addEventListener("change", toggleMapVisibility);
+        document
+          .getElementById("toggleMapStyle")
+          .addEventListener("change", toggleMapStyle);
+        document
+          .getElementById("showIneligibleBills")
+          .addEventListener("change", toggleMapVisibility);
+        document
+          .getElementById("showUnallocatedBills")
+          .addEventListener("change", toggleMapVisibility);
+
+        const modeToggle = document.getElementById("modeToggle");
+        const tripDistanceInputs = document.querySelectorAll(
+          ".trip-distance-input"
+        );
+        const minBillsInputs = document.querySelectorAll(".trip-kg-input");
+
+        // CORRECTED: Use a class selector to reliably find all "Available" inputs
+        const availableInputs = document.querySelectorAll(
+          ".available-count-input"
+        );
+
+        let originalTripDistances = {};
+        let originalMinBills = {};
+        let originalAvailableCounts = {};
+
+        function saveOriginalValues() {
+          tripDistanceInputs.forEach((input, index) => {
+            originalTripDistances[index] = input.value;
+          });
+          minBillsInputs.forEach((input, index) => {
+            originalMinBills[index] = input.value;
+          });
+          // NEW: Save the original available counts for all vehicles
+          availableInputs.forEach((input, index) => {
+            originalAvailableCounts[index] = input.value;
+          });
+        }
+
+        modeToggle.addEventListener("change", function () {
+          if (this.checked) {
+            // Manual mode is ON
+            saveOriginalValues();
+            tripDistanceInputs.forEach((input) => {
+              input.value = 0.1;
+              input.disabled = true;
+            });
+            minBillsInputs.forEach((input) => {
+              input.value = 1;
+              input.disabled = true;
+            });
+            // NEW: Set all vehicle available counts to 1 and disable them
+            availableInputs.forEach((input) => {
+              input.value = 1;
+              input.disabled = true;
+            });
+            saveAndRunOptimization();
+          } else {
+            // Automatic mode is ON
+            tripDistanceInputs.forEach((input, index) => {
+              input.value = originalTripDistances[index];
+              input.disabled = false;
+            });
+            minBillsInputs.forEach((input, index) => {
+              input.value = originalMinBills[index];
+              input.disabled = false;
+            });
+            // NEW: Restore original available counts for all vehicles and enable them
+            availableInputs.forEach((input, index) => {
+              input.value = originalAvailableCounts[index];
+              input.disabled = false;
+            });
+          }
+        });
+
+        // Save initial values when the modal is opened for the first time
+        saveOriginalValues();
+
+        document
+          .querySelectorAll(".product-filter-checkbox")
+          .forEach((checkbox) => {
+            checkbox.addEventListener("change", toggleMapVisibility);
+          });
+
+        document
+          .querySelectorAll(".breach-filter-checkbox")
+          .forEach((checkbox) => {
+            checkbox.addEventListener("change", toggleMapVisibility);
+          });
+
+        // NEW: Initially hide the breach filters
+        document.getElementById("breachFilters").style.display = "none";
+
+        document.getElementById("downloadAllocatedBtn").style.display = "none";
+        document.getElementById("downloadUnallocatedBtn").style.display =
+          "none";
+        document.getElementById("downloadTripsBtn").style.display = "none";
+        document.getElementById("tripSelector").style.display = "none";
+        document.getElementById("productFilters").style.display = "none";
+
+        updateButtonRowLayout(false);
+        renderDispositionCheckboxes();
+      });
+
+      let directionsService;
+      let directionsRenderers = [];
+      let finalRoutes = {};
+      let tripsToSequence = [];
+      let completedTrips = 0;
+
+      function finalizeAndSequenceRoutes() {
+        if (Object.keys(tripRoutes).length === 0) {
+          showToast(
+            "Success",
+            "No trips to finalize. Please run optimization first.",
+            "Success"
+          );
+          return;
+        }
+
+        if (renderused == "Yes") {
+          showToast("Success", "Already Optimzied", "Success");
+          return;
+        }
+
+        const userConfirmed = confirm(
+          "Are you sure you want to finalize and sequence the routes? This action cannot be undone."
+        );
+        if (!userConfirmed) {
+          return;
+        }
+        showToast(
+          "Success",
+          "This action will prevent from any further edits on the plan",
+          "Success"
+        );
+
+        if (!directionsService) {
+          directionsService = new google.maps.DirectionsService();
+        }
+
+        showLoader();
+        tripsToSequence = Object.keys(tripRoutes);
+        completedTrips = 0;
+        finalRoutes = {};
+        clearMap();
+        processNextTrip();
+      }
+
+      let renderused = "No";
+
+      function processNextTrip() {
+        if (completedTrips < tripsToSequence.length) {
+          const tripId = tripsToSequence[completedTrips];
+          const tripData = tripRoutes[tripId];
+          const color = getTripColor(tripId);
+
+          const warehousePoint = tripData.route.find(
+            (p) => p.type === "warehouse"
+          );
+          const deliveryPoints = tripData.route.filter(
+            (p) => p.type === "delivery" && p.lat && p.lng
+          );
+
+          if (deliveryPoints.length > 0 && warehousePoint) {
+            const uniqueLocationsMap = new Map();
+            deliveryPoints.forEach((p) => {
+              const key = `${p.lat},${p.lng}`;
+              if (!uniqueLocationsMap.has(key)) {
+                uniqueLocationsMap.set(key, []);
+              }
+              uniqueLocationsMap.get(key).push(p);
+            });
+            const uniqueLocations = Array.from(uniqueLocationsMap.keys());
+
+            const destinationLocationKey =
+              uniqueLocations[uniqueLocations.length - 1];
+            const waypointsLocations = uniqueLocations.slice(0, -1);
+
+            const request = {
+              origin: new google.maps.LatLng(
+                warehousePoint.lat,
+                warehousePoint.lng
+              ),
+              destination: new google.maps.LatLng(
+                parseFloat(destinationLocationKey.split(",")[0]),
+                parseFloat(destinationLocationKey.split(",")[1])
+              ),
+              waypoints: waypointsLocations.map((key) => ({
+                location: new google.maps.LatLng(
+                  parseFloat(key.split(",")[0]),
+                  parseFloat(key.split(",")[1])
+                ),
+                stopover: true,
+              })),
+              optimizeWaypoints: false,
+              travelMode: google.maps.TravelMode.DRIVING,
+            };
+
+            directionsService.route(request, (result, status) => {
+              let totalDistanceKm;
+
+              if (status === "OK") {
+                totalDistanceKm =
+                  result.routes[0].legs.reduce(
+                    (sum, leg) => sum + leg.distance.value,
+                    0
+                  ) / 1000;
+
+                const renderer = new google.maps.DirectionsRenderer({
+                  map: map,
+                  directions: result,
+                  suppressMarkers: true,
+                  polylineOptions: {
+                    strokeColor: color,
+                    strokeWeight: 5,
+                    strokeOpacity: 0.8,
+                  },
+                });
+                directionsRenderers.push(renderer);
+
+                const orderedWaypoints = result.routes[0].waypoint_order;
+                const sequencedUniqueLocations = [
+                  ...orderedWaypoints.map((index) => waypointsLocations[index]),
+                  destinationLocationKey,
+                ];
+
+                let newRoute = [warehousePoint];
+                sequencedUniqueLocations.forEach((locationKey, index) => {
+                  const billsAtThisLocation =
+                    uniqueLocationsMap.get(locationKey);
+                  billsAtThisLocation.forEach((bill) => {
+                    bill.sequence = index + 1;
+                    newRoute.push(bill);
+                  });
+                });
+
+                finalRoutes[tripId] = {
+                  ...tripData,
+                  route: newRoute,
+                  totalDistanceKm: totalDistanceKm.toFixed(2),
+                };
+
+                // Update the totalDistanceKm in the allTripStats array
+                const tripStatIndex = allTripStats.findIndex(
+                  (stat) => stat.tripId === tripId
+                );
+                if (tripStatIndex !== -1) {
+                  allTripStats[tripStatIndex].totalDistanceKm = totalDistanceKm;
+                }
+              } else {
+                showError(
+                  `Directions Service failed for ${tripId}: ${status}. Using estimated distance.`
+                );
+                totalDistanceKm = tripData.totalDistanceKm;
+                finalRoutes[tripId] = tripData;
+              }
+
+              completedTrips++;
+              processNextTrip();
+            });
+          } else {
+            // Handle trips with no delivery points
+            finalRoutes[tripId] = tripData;
+            completedTrips++;
+            processNextTrip();
+          }
+        } else {
+          // All trips have been processed. Now render everything.
+          tripRoutes = finalRoutes;
+          renderTripStatsTable(allTripStats);
+          drawAllFinalRoutes();
+          hideLoader();
+          currentMarkers.forEach((marker) => {
+            google.maps.event.clearListeners(marker, "click");
+          });
+          dragSelectEnabled = false;
+          renderused = "Yes";
+          map.setOptions({ draggableCursor: "grab" }); // Or 'default'
+        }
+      }
+
+      // Function to draw all elements from the finalRoutes object
+      function drawAllFinalRoutes() {
+        clearMap();
+
+        const bounds = new google.maps.LatLngBounds();
+        let colorIndex = 0;
+
+        // Draw polygons and tour labels first
+        for (const tripId in tripRoutes) {
+          const tripData = tripRoutes[tripId];
+          const color = TRIP_COLORS[colorIndex % TRIP_COLORS.length];
+          colorIndex++;
+
+          if (tripData.polygonPoints && tripData.polygonPoints.length >= 3) {
+            const tripPolygon = new google.maps.Polygon({
+              paths: tripData.polygonPoints,
+              strokeColor: color.main,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color.main,
+              fillOpacity: 0.25,
+              map: map,
+            });
+            currentTripPolygonObjects.push(tripPolygon);
+            let polygonCenter = getPolygonCenter(tripData.polygonPoints);
+            if (polygonCenter) {
+              const textLabel = new google.maps.Marker({
+                position: polygonCenter,
+                map: map,
+                icon: {
+                  url:
+                    "data:image/svg+xml;charset=UTF-8," +
+                    encodeURIComponent(
+                      `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="30">
+                                <rect x="0" y="0" width="120" height="30" fill="${color.main}" opacity="0.8" rx="5" ry="5"/>
+                                <text x="60" y="20" font-family="Arial" font-size="14" fill="white" text-anchor="middle">${tripId}</text>
+                            </svg>`
+                    ),
+                  scaledSize: new google.maps.Size(120, 30),
+                  anchor: new google.maps.Point(60, 15),
+                },
+                zIndex: google.maps.Marker.MAX_ZINDEX + 2,
+              });
+              currentTourNameLabels.push(textLabel);
+            }
+          }
+        }
+
+        // Now, draw markers and extend bounds
+        let markerColorIndex = 0;
+        for (const tripId in tripRoutes) {
+          const tripData = tripRoutes[tripId];
+          const color = TRIP_COLORS[markerColorIndex % TRIP_COLORS.length];
+          markerColorIndex++;
+
+          const locationMarkers = new Map();
+          tripData.route.forEach((point) => {
+            const locationKey = `${point.lat},${point.lng}`;
+            if (!locationMarkers.has(locationKey)) {
+              locationMarkers.set(locationKey, []);
+            }
+            locationMarkers.get(locationKey).push(point);
+          });
+
+          locationMarkers.forEach((pointsAtLocation) => {
+            const position = new google.maps.LatLng(
+              pointsAtLocation[0].lat,
+              pointsAtLocation[0].lng
+            );
+            const isMultiBillMarker = pointsAtLocation.length > 1;
+
+            if (pointsAtLocation[0].type === "warehouse") {
+              const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                icon: getMarkerIcon(color.main, 8),
+                title: `Warehouse (${
+                  pointsAtLocation[0].warehouseName || "N/A"
+                }, Trip: ${tripId})`,
+                zIndex: google.maps.Marker.MAX_ZINDEX + 3,
+                visibilityType: "whallocated",
+                billId: null,
+              });
+              currentMarkers.push(marker);
+            } else {
+              let iconUrl;
+              let markerSize;
+              let markerAnchor;
+
+              if (isMultiBillMarker) {
+                const labelText = pointsAtLocation.length.toString();
+                iconUrl =
+                  "data:image/svg+xml;charset=UTF-8," +
+                  encodeURIComponent(
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="32" r="8" fill="${color.main}" stroke="#FFFFFF" stroke-width="2"/>
+                            <rect x="10" y="5" width="20" height="20" fill="#FF0000" opacity="0.9" rx="3" ry="3"/>
+                            <text x="20" y="20" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${labelText}</text>
+                        </svg>`
+                  );
+                markerSize = new google.maps.Size(40, 40);
+                markerAnchor = new google.maps.Point(20, 40);
+              } else {
+                const sequenceNumber = pointsAtLocation[0].sequence.toString();
+                iconUrl =
+                  "data:image/svg+xml;charset=UTF-8," +
+                  encodeURIComponent(
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="8" fill="${color.main}" stroke="#FFFFFF" stroke-width="2"/>
+                            <text x="10" y="14" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${sequenceNumber}</text>
+                        </svg>`
+                  );
+                markerSize = new google.maps.Size(20, 20);
+                markerAnchor = new google.maps.Point(10, 10);
+              }
+
+              pointsAtLocation.forEach((point) => {
+                const bill = allBills.find((b) => b.id === point.billId);
+                const marker = new google.maps.Marker({
+                  position: position,
+                  map: map,
+                  icon: {
+                    url: iconUrl,
+                    scaledSize: markerSize,
+                    anchor: markerAnchor,
+                  },
+                  title: `Stop ${point.sequence} (Bill ID: ${
+                    point.billId
+                  }, Vehicle: ${
+                    tripData.vehicleType
+                  }, Trip: ${tripId})\nInvoice Value: ${
+                    typeof point.invoiceValue === "number"
+                      ? point.invoiceValue.toFixed(2)
+                      : "N/A"
+                  }\nWeight: ${
+                    typeof point.weight === "number"
+                      ? point.weight.toFixed(2)
+                      : "N/A"
+                  }`,
+                  id: point.billId,
+                  tripId: tripId,
+                  billLat: point.lat,
+                  billLng: point.lng,
+                  retailerId: point.retailerId,
+                  invoiceValue: point.invoiceValue,
+                  visibilityType: "allocated",
+                  bill: bill,
+                });
+                currentMarkers.push(marker);
+              });
+            }
+            bounds.extend(position);
+          });
+        }
+
+        // Add unallocated and ineligible bills to the map
+        const ineligibleBills = allBills.filter(
+          (b) => b.tripId === "INELIGIBLE"
+        );
+        const unallocatedBills = allBills.filter(
+          (b) => b.tripId === "UNALLOCATED"
+        );
+        drawIneligibleBillsOnMap(ineligibleBills, bounds);
+        drawEligibleUnallocatedBillsOnMap(unallocatedBills, bounds);
+
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds);
+        }
+        toggleMapVisibility();
+      }
+
+      function renderDispositionCheckboxes() {
+        const container = document.getElementById("dispositionCheckboxes");
+        const dispositions = [
+          "Packed",
+          "Order Confirmed",
+          "Could Not Attempt",
+          "Order Accepted",
+          "Shop Closed",
+          "Did not place order",
+          "Wrong shop location",
+        ];
+        let html = "";
+        dispositions.forEach((disp) => {
+          const isChecked = ["Packed"].includes(disp) ? "checked" : "";
+          html += `
+                    <div class="col-md-4 col-sm-6">
+                        <div class="form-check">
+                            <input class="form-check-input disposition-checkbox" type="checkbox" value="${disp}" id="disp-${disp.replace(
+            /\s/g,
+            "-"
+          )}" ${isChecked}>
+                            <label class="form-check-label" for="disp-${disp.replace(
+                              /\s/g,
+                              "-"
+                            )}">
+                                ${disp}
+                            </label>
+                        </div>
+                    </div>
+                `;
+        });
+        container.innerHTML = html;
+      }
+
+      document
+        .getElementById("downloadTripsBtn")
+        .addEventListener("click", function () {
+          if (!allTripStats || allTripStats.length === 0) {
+            showToast(
+              "No trip statistics data available for download. Run optimization first."
+            );
+            return;
+          }
+          // First, call the server to log the data to the sheet
+        });
+
+      function updateButtonRowLayout(showAllButtons) {
+        const downloadAllocatedBtn = document.getElementById(
+          "downloadAllocatedBtn"
+        );
+        const downloadUnallocatedBtn = document.getElementById(
+          "downloadUnallocatedBtn"
+        );
+        const downloadTripsBtn = document.getElementById("downloadTripsBtn");
+        const planDoneBtn = document.getElementById("planDoneBtn"); // Get the new button
+
+        if (showAllButtons) {
+          downloadAllocatedBtn.style.display = "flex";
+          downloadUnallocatedBtn.style.display = "flex";
+          downloadTripsBtn.style.display = "flex";
+          planDoneBtn.style.display = "flex"; // Show the "Plan Done" button
+        } else {
+          downloadAllocatedBtn.style.display = "none";
+          downloadUnallocatedBtn.style.display = "none";
+          downloadTripsBtn.style.display = "none";
+          planDoneBtn.style.display = "none"; // Hide it initially
+        }
+      }
+
+      function downloadAllocatedBills() {
+        // CRITICAL FIX: Filter the global 'allBills' array to get allocated bills
+        const allocatedBillsToDownload = allBills.filter(
+          (b) =>
+            b.tripId && b.tripId !== "UNALLOCATED" && b.tripId !== "INELIGIBLE"
+        );
+
+        if (allocatedBillsToDownload.length === 0) {
+          showToast(
+            "No allocated bills data available for download. Run optimization first."
+          );
+          return;
+        }
+
+        // Correctly call the server-side function with only two arguments
+        google.script.run
+          .withSuccessHandler(function (csvContent) {
+            if (csvContent) {
+              downloadCSV(csvContent, "allocated_bills.csv");
+              if (startTimeForLogging) {
+                const endTime = new Date();
+                const timeTakenMs =
+                  endTime.getTime() - startTimeForLogging.getTime();
+                const timeTakenSeconds = (timeTakenMs / 1000).toFixed(2);
+                showToast(
+                  "Success",
+                  `Allocated bills CSV download initiated. Operation took ${timeTakenSeconds} seconds.`,
+                  "success"
+                );
+                logUsage("Download Allocated Bills", timeTakenSeconds);
+                startTimeForLogging = null;
+              } else {
+                showToast(
+                  "Success",
+                  "Allocated bills CSV download initiated.",
+                  "success"
+                );
+              }
+            } else {
+              showError("Failed to generate CSV for allocated bills.");
+            }
+          })
+          .withFailureHandler(function (error) {
+            showError(
+              `Error preparing allocated bills for download: ${error.message}`
+            );
+          })
+          .generateCsvForDownload(
+            JSON.stringify(allocatedBillsToDownload),
+            "allocated_bills"
+          );
+      }
+
+      function downloadAllocatedBills1() {
+        // CRITICAL FIX: Filter the global 'allBills' array to get allocated bills
+        const allocatedBillsToDownload = allBills.filter(
+          (b) =>
+            b.tripId && b.tripId !== "UNALLOCATED" && b.tripId !== "INELIGIBLE"
+        );
+
+        if (allocatedBillsToDownload.length === 0) {
+          showToast(
+            "No allocated bills data available for download. Run optimization first."
+          );
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (csvContent) {
+            if (csvContent) {
+              downloadCSV(csvContent, "allocated_bills.csv");
+              if (startTimeForLogging) {
+                const endTime = new Date();
+                const timeTakenMs =
+                  endTime.getTime() - startTimeForLogging.getTime();
+                const timeTakenSeconds = (timeTakenMs / 1000).toFixed(2);
+                showToast(
+                  "Success",
+                  `Allocated bills CSV download initiated. Operation took ${timeTakenSeconds} seconds.`,
+                  "success"
+                );
+                logUsage("Download Allocated Bills", timeTakenSeconds);
+                startTimeForLogging = null;
+              } else {
+                showToast(
+                  "Success",
+                  "Allocated bills CSV download initiated.",
+                  "success"
+                );
+              }
+            } else {
+              showError("Failed to generate CSV for allocated bills.");
+            }
+          })
+          .withFailureHandler(function (error) {
+            showError(
+              `Error preparing allocated bills for download: ${error.message}`
+            );
+          })
+          .generateCsvForDownload(
+            JSON.stringify(allocatedBillsToDownload),
+            "allocated_bills",
+            JSON.stringify(allTripStats)
+          );
+
+        showLoader();
+        google.script.run
+          .withSuccessHandler(function (response) {
+            hideLoader();
+            if (response.status === "success") {
+              showToast(
+                "Success",
+                'Plan summary logged to "Plan Compilation" sheet.',
+                "success"
+              );
+              // Now, proceed with the CSV download
+              downloadTripStatistics();
+            } else {
+              showError(`Failed to log data to sheet: ${response.message}`);
+            }
+          })
+          .withFailureHandler(function (error) {
+            hideLoader();
+            showError(`Failed to log data to sheet: ${error.message}`);
+          })
+          .logTripSummaryToSheet(JSON.stringify(allTripStats));
+      }
+      function downloadUnallocatedBills() {
+        // CRITICAL FIX: Filter the global 'allBills' array to get unallocated bills
+        const unallocatedBillsToDownload = allBills.filter(
+          (b) => b.tripId === "UNALLOCATED" || b.tripId === "INELIGIBLE"
+        );
+
+        if (unallocatedBillsToDownload.length === 0) {
+          showToast("No unallocated bills data available for download.");
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (csvContent) {
+            if (csvContent) {
+              downloadCSV(csvContent, "unallocated_bills.csv");
+            } else {
+              showError("Failed to generate CSV for unallocated bills.");
+            }
+          })
+          .withFailureHandler(function (error) {
+            showError(
+              `Error preparing unallocated bills for download: ${error.message}`
+            );
+          })
+          .generateCsvForDownload(
+            JSON.stringify(unallocatedBillsToDownload),
+            "unallocated_bills"
+          );
+      }
+
+      function downloadTripStatistics() {
+        if (!allTripStats || allTripStats.length === 0) {
+          showToast(
+            "No trip statistics data available for download. Run optimization first."
+          );
+          return;
+        }
+        google.script.run
+          .withSuccessHandler(function (csvContent) {
+            if (csvContent) {
+              downloadCSV(csvContent, "trip_statistics.csv");
+            } else {
+              showError("Failed to generate CSV for trip statistics.");
+            }
+          })
+          .withFailureHandler(function (error) {
+            showError(
+              `Error preparing trip statistics for download: ${error.message}`
+            );
+          })
+          .generateCsvForDownload(JSON.stringify(allTripStats), "trip_stats");
+      }
+
+      function downloadCSV(content, filename) {
+        const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      function updateTripDropdown() {
+        const dropdown = document.getElementById("tripDropdown");
+        dropdown.innerHTML = '<option value="">-- Show All Trips --</option>';
+        for (const tripId in tripRoutes) {
+          const option = document.createElement("option");
+          option.value = tripId;
+          option.textContent = tripId;
+          dropdown.appendChild(option);
+        }
+        if (
+          allUnallocatedBillsData.length > 0 ||
+          allIneligibleBillsData.length > 0
+        ) {
+          const unallocatedOption = document.createElement("option");
+          unallocatedOption.value = "UNALLOCATED";
+          unallocatedOption.textContent = "Unallocated Bills";
+          dropdown.appendChild(unallocatedOption);
+        }
+        if (
+          Object.keys(tripRoutes).length > 0 ||
+          allUnallocatedBillsData.length > 0 ||
+          allIneligibleBillsData.length > 0
+        ) {
+          document.getElementById("tripSelector").style.display = "block";
+        } else {
+          document.getElementById("tripSelector").style.display = "none";
+        }
+      }
+
+      function handleTripSelection() {
+        const tripId = this.value;
+        clearMap();
+
+        // Hide all directions renderers initially
+        directionsRenderers.forEach((renderer) => renderer.setMap(null));
+
+        if (!tripId) {
+          showAllTrips();
+          return;
+        }
+
+        const bounds = new google.maps.LatLngBounds();
+
+        if (tripId === "UNALLOCATED") {
+          drawEligibleUnallocatedBillsOnMap(allUnallocatedBillsData, bounds);
+          drawIneligibleBillsOnMap(allIneligibleBillsData, bounds);
+          if (!bounds.isEmpty()) {
+            map.fitBounds(bounds);
+          }
+        } else {
+          const tripData = tripRoutes[tripId];
+          const color = getTripColor(tripId);
+
+          // Find the corresponding DirectionsRenderer and set it to the map
+          const renderer = directionsRenderers.find((r) => {
+            // Check if renderer and its directions property exist
+            if (
+              r.directions &&
+              r.directions.request &&
+              r.directions.request.origin &&
+              r.directions.request.origin.location
+            ) {
+              // Find the renderer based on the origin point
+              return (
+                r.directions.request.origin.location.lat() ===
+                  tripData.route[0].lat &&
+                r.directions.request.origin.location.lng() ===
+                  tripData.route[0].lng
+              );
+            }
+            return false;
+          });
+
+          if (renderer) {
+            renderer.setMap(map);
+          } else {
+            // Fallback to drawing simple polyline if renderer is not found
+            drawRoute(
+              tripData.route,
+              tripData.polygonPoints,
+              color,
+              color,
+              tripId,
+              bounds,
+              tripData.vehicleType
+            );
+          }
+
+          // Draw markers for the selected trip
+          const locationMarkers = new Map();
+          tripData.route.forEach((point) => {
+            const locationKey = `${point.lat},${point.lng}`;
+            if (!locationMarkers.has(locationKey)) {
+              locationMarkers.set(locationKey, []);
+            }
+            locationMarkers.get(locationKey).push(point);
+          });
+
+          locationMarkers.forEach((pointsAtLocation) => {
+            const position = new google.maps.LatLng(
+              pointsAtLocation[0].lat,
+              pointsAtLocation[0].lng
+            );
+            const isMultiBillMarker = pointsAtLocation.length > 1;
+            const markerColor = getTripColor(tripId);
+
+            if (pointsAtLocation[0].type === "warehouse") {
+              const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                icon: getMarkerIcon(markerColor, 8),
+                title: `Warehouse (${
+                  pointsAtLocation[0].warehouseName || "N/A"
+                }, Trip: ${tripId})`,
+                zIndex: google.maps.Marker.MAX_ZINDEX + 3,
+                visibilityType: "whallocated",
+                billId: null,
+              });
+              currentMarkers.push(marker);
+            } else {
+              let iconUrl;
+              let markerSize;
+              let markerAnchor;
+
+              if (isMultiBillMarker) {
+                const labelText = pointsAtLocation.length.toString();
+                iconUrl =
+                  "data:image/svg+xml;charset=UTF-8," +
+                  encodeURIComponent(
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="32" r="8" fill="${markerColor}" stroke="#FFFFFF" stroke-width="2"/>
+                            <rect x="10" y="5" width="20" height="20" fill="#FF0000" opacity="0.9" rx="3" ry="3"/>
+                            <text x="20" y="20" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${labelText}</text>
+                        </svg>`
+                  );
+                markerSize = new google.maps.Size(40, 40);
+                markerAnchor = new google.maps.Point(20, 40);
+              } else {
+                const sequenceNumber = pointsAtLocation[0].sequence.toString();
+                iconUrl =
+                  "data:image/svg+xml;charset=UTF-8," +
+                  encodeURIComponent(
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="8" fill="${markerColor}" stroke="#FFFFFF" stroke-width="2"/>
+                            <text x="10" y="14" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${sequenceNumber}</text>
+                        </svg>`
+                  );
+                markerSize = new google.maps.Size(20, 20);
+                markerAnchor = new google.maps.Point(10, 10);
+              }
+
+              pointsAtLocation.forEach((point) => {
+                const bill = allBills.find((b) => b.id === point.billId);
+                const marker = new google.maps.Marker({
+                  position: position,
+                  map: map,
+                  icon: {
+                    url: iconUrl,
+                    scaledSize: markerSize,
+                    anchor: markerAnchor,
+                  },
+                  title: `Stop ${point.sequence} (Bill ID: ${
+                    point.billId
+                  }, Vehicle: ${
+                    tripData.vehicleType
+                  }, Trip: ${tripId})\nInvoice Value: ${
+                    typeof point.invoiceValue === "number"
+                      ? point.invoiceValue.toFixed(2)
+                      : "N/A"
+                  }\nWeight: ${
+                    typeof point.weight === "number"
+                      ? point.weight.toFixed(2)
+                      : "N/A"
+                  }`,
+                  id: point.billId,
+                  tripId: tripId,
+                  billLat: point.lat,
+                  billLng: point.lng,
+                  retailerId: point.retailerId,
+                  invoiceValue: point.invoiceValue,
+                  visibilityType: "allocated",
+                  bill: bill,
+                });
+                marker.addListener("click", () => {
+                  openReassignInfoWindow(point, marker.getPosition());
+                });
+                currentMarkers.push(marker);
+              });
+            }
+            bounds.extend(position);
+          });
+
+          if (tripData.polygonPoints && tripData.polygonPoints.length >= 3) {
+            const tripPolygon = new google.maps.Polygon({
+              paths: tripData.polygonPoints,
+              strokeColor: color.main,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color.main,
+              fillOpacity: 0.25,
+              map: map,
+            });
+            currentTripPolygonObjects.push(tripPolygon);
+            let polygonCenter = getPolygonCenter(tripData.polygonPoints);
+            if (polygonCenter) {
+              const textLabel = new google.maps.Marker({
+                position: polygonCenter,
+                map: map,
+                icon: {
+                  url:
+                    "data:image/svg+xml;charset=UTF-8," +
+                    encodeURIComponent(
+                      `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="30">
+                                <rect x="0" y="0" width="120" height="30" fill="${color.main}" opacity="0.8" rx="5" ry="5"/>
+                                <text x="60" y="20" font-family="Arial" font-size="14" fill="white" text-anchor="middle">${tripId}</text>
+                            </svg>`
+                    ),
+                  scaledSize: new google.maps.Size(120, 30),
+                  anchor: new google.maps.Point(60, 15),
+                },
+                zIndex: google.maps.Marker.MAX_ZINDEX + 2,
+              });
+              currentTourNameLabels.push(textLabel);
+            }
+          }
+        }
+        toggleMapVisibility();
+      }
+
+      function showAllTrips() {
+        clearMap();
+        let colorIndex = 0;
+        const bounds = new google.maps.LatLngBounds();
+        for (const tripId in tripRoutes) {
+          const tripData = tripRoutes[tripId];
+          if (
+            !tripData ||
+            tripData.route.filter((p) => p.type === "delivery").length === 0
+          ) {
+            continue;
+          }
+          const color = TRIP_COLORS[colorIndex % TRIP_COLORS.length];
+          colorIndex++;
+          drawRoute(
+            tripData.route,
+            tripData.polygonPoints,
+            color.main,
+            color.main,
+            tripId,
+            bounds,
+            tripData.vehicleType
+          );
+        }
+
+        const ineligibleBills = allBills.filter(
+          (b) => b.tripId === "INELIGIBLE"
+        );
+        const unallocatedBills = allBills.filter(
+          (b) => b.tripId === "UNALLOCATED"
+        );
+
+        drawIneligibleBillsOnMap(ineligibleBills, bounds);
+        drawEligibleUnallocatedBillsOnMap(unallocatedBills, bounds);
+        if (currentMarkers.length > 0 || currentTripPolygonObjects.length > 0) {
+          const combinedBounds = new google.maps.LatLngBounds();
+          currentMarkers.forEach((marker) => {
+            combinedBounds.extend(marker.getPosition());
+          });
+          currentTripPolygonObjects.forEach((p) => {
+            p.getPath().forEach((coord) => combinedBounds.extend(coord));
+          });
+          map.fitBounds(combinedBounds);
+        }
+        toggleMapVisibility();
+      }
+
+      function drawIneligibleBillsOnMap(ineligibleBills, boundsToExtend) {
+        ineligibleBills.forEach((bill) => {
+          const position = new google.maps.LatLng(bill.lat, bill.lng);
+
+          const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: "#FF0000",
+              fillOpacity: 0.8,
+              strokeColor: "black",
+              strokeWeight: 1,
+              scale: 6,
+            },
+            title: `INELIGIBLE: ${bill.reason || "N/A"}\nBill ID: ${bill.id}`,
+            id: bill.id,
+            tripId: "INELIGIBLE",
+            visibilityType: "ineligible",
+            bill: bill,
+          });
+          marker.addListener("click", () => {
+            openIneligibleInfoWindow(marker.id, marker.getPosition());
+          });
+          currentMarkers.push(marker);
+          if (boundsToExtend) {
+            boundsToExtend.extend(position);
+          }
+        });
+      }
+
+      function drawEligibleUnallocatedBillsOnMap(
+        unallocatedBills,
+        boundsToExtend
+      ) {
+        unallocatedBills.forEach((bill) => {
+          const position = new google.maps.LatLng(bill.lat, bill.lng);
+          const locationKey = `${bill.lat},${bill.lng}`;
+          const billsAtThisLocation = billsAtSameLocation[locationKey] || [];
+          const isMultiBillMarker = billsAtThisLocation.length > 1;
+
+          let iconURL = "";
+          if (isMultiBillMarker) {
+            const labelText = billsAtThisLocation.length.toString();
+            // Create a custom SVG icon with both the circle and the label
+            iconURL =
+              "data:image/svg+xml;charset=UTF-8," +
+              encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="32" r="8" fill="#000000" stroke="#FFFFFF" stroke-width="2"/>
+                    <rect x="10" y="5" width="20" height="20" fill="#FF0000" opacity="0.7" rx="3" ry="3"/>
+                    <text x="20" y="20" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${labelText}</text>
+                </svg>`
+              );
+          } else {
+            // Default icon for a single bill
+            iconURL =
+              "data:image/svg+xml;charset=UTF-8," +
+              encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="8" fill="#000000" stroke="#FFFFFF" stroke-width="2"/>
+                </svg>`
+              );
+          }
+
+          const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            icon: {
+              url: iconURL,
+              // The scaledSize and anchor are crucial for positioning the combined icon
+              scaledSize: new google.maps.Size(40, 40),
+              anchor: new google.maps.Point(20, 40), // Anchor at the bottom of the SVG
+            },
+            title: `UNALLOCATED\nBill ID: ${bill.id}\nReason: ${
+              bill.unallocationReason || "N/A"
+            }`,
+            id: bill.id,
+            tripId: "UNALLOCATED",
+            billLat: bill.lat,
+            billLng: bill.lng,
+            retailerId: bill.retailerId,
+            invoiceValue: bill.invoiceValue,
+            zIndex: google.maps.Marker.MAX_ZINDEX + 1,
+            visibilityType: "unallocated",
+            bill: bill,
+          });
+
+          marker.addListener("click", () => {
+            openReassignInfoWindow(bill, marker.getPosition());
+          });
+
+          currentMarkers.push(marker);
+          if (boundsToExtend) {
+            boundsToExtend.extend(position);
+          }
+        });
+      }
+
+      function drawRoute(
+        route,
+        polygonPointsForTrip,
+        mainColor,
+        fillColor,
+        tripId,
+        boundsToExtend,
+        tripVehicleType
+      ) {
+        if (!map || typeof google === "undefined") {
+          showToast(
+            "Error",
+            "Map not initialized, cannot draw route.",
+            "danger"
+          );
+          return;
+        }
+
+        const locationBillsMap = new Map();
+        route.forEach((point) => {
+          const locationKey = `${point.lat},${point.lng}`;
+          if (!locationBillsMap.has(locationKey)) {
+            locationBillsMap.set(locationKey, []);
+          }
+          locationBillsMap.get(locationKey).push(point);
+        });
+
+        for (const [
+          locationKey,
+          pointsAtLocation,
+        ] of locationBillsMap.entries()) {
+          const position = new google.maps.LatLng(
+            pointsAtLocation[0].lat,
+            pointsAtLocation[0].lng
+          );
+          const isMultiBillMarker = pointsAtLocation.length > 1;
+
+          if (pointsAtLocation[0].type === "warehouse") {
+            const marker = new google.maps.Marker({
+              position: position,
+              map: map,
+              icon: getMarkerIcon(mainColor, 8),
+              title: `Warehouse (${
+                pointsAtLocation[0].warehouseName || "N/A"
+              }, Trip: ${tripId})`,
+              zIndex: google.maps.Marker.MAX_ZINDEX + 3,
+              visibilityType: "whallocated",
+              billId: null,
+            });
+            currentMarkers.push(marker);
+          } else {
+            let iconUrl;
+            let markerSize;
+            let markerAnchor;
+
+            if (isMultiBillMarker) {
+              const labelText = pointsAtLocation.length.toString();
+              iconUrl =
+                "data:image/svg+xml;charset=UTF-8," +
+                encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                        <circle cx="20" cy="32" r="8" fill="${mainColor}" stroke="#FFFFFF" stroke-width="2"/>
+                        <rect x="10" y="5" width="20" height="20" fill="#FF0000" opacity="0.9" rx="3" ry="3"/>
+                        <text x="20" y="20" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${labelText}</text>
+                    </svg>`
+                );
+              markerSize = new google.maps.Size(40, 40);
+              markerAnchor = new google.maps.Point(20, 40);
+            } else {
+              const sequenceNumber = pointsAtLocation[0].sequence.toString();
+              iconUrl =
+                "data:image/svg+xml;charset=UTF-8," +
+                encodeURIComponent(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                        <circle cx="10" cy="10" r="8" fill="${mainColor}" stroke="#FFFFFF" stroke-width="2"/>
+                        <text x="10" y="14" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">${sequenceNumber}</text>
+                    </svg>`
+                );
+              markerSize = new google.maps.Size(20, 20);
+              markerAnchor = new google.maps.Point(10, 10);
+            }
+
+            pointsAtLocation.forEach((point) => {
+              const bill = allBills.find((b) => b.id === point.billId);
+              point.tripId = tripId;
+              const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                icon: {
+                  url: iconUrl,
+                  scaledSize: markerSize,
+                  anchor: markerAnchor,
+                },
+                title: `Stop ${point.sequence} (Bill ID: ${
+                  point.billId
+                }, Vehicle: ${tripVehicleType}, Trip: ${tripId})\nInvoice Value: ${
+                  typeof point.invoiceValue === "number"
+                    ? point.invoiceValue.toFixed(2)
+                    : "N/A"
+                }\nWeight: ${
+                  typeof point.weight === "number"
+                    ? point.weight.toFixed(2)
+                    : "N/A"
+                }`,
+                id: point.billId,
+                tripId: tripId,
+                billLat: point.lat,
+                billLng: point.lng,
+                retailerId: point.retailerId,
+                invoiceValue: point.invoiceValue,
+                visibilityType: "allocated",
+                bill: bill,
+              });
+
+              marker.addListener("click", () => {
+                openReassignInfoWindow(point, marker.getPosition());
+              });
+              currentMarkers.push(marker);
+            });
+          }
+        }
+
+        if (polygonPointsForTrip && polygonPointsForTrip.length >= 3) {
+          const effectivePolygonPoints = polygonPointsForTrip;
+          const tripPolygon = new google.maps.Polygon({
+            paths: effectivePolygonPoints,
+            strokeColor: mainColor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: fillColor,
+            fillOpacity: 0.25,
+            map: map,
+          });
+          currentTripPolygonObjects.push(tripPolygon);
+
+          tripPolygon.addListener("click", (event) => {
+            infoWindow.setContent(
+              `<div><strong>Trip:</strong> ${tripId}<br><strong>Vehicle:</strong> ${tripVehicleType}</div>`
+            );
+            infoWindow.setPosition(event.latLng);
+            infoWindow.open(map);
+          });
+
+          let polygonCenter = getPolygonCenter(effectivePolygonPoints);
+          if (polygonCenter) {
+            const textLabel = new google.maps.Marker({
+              position: polygonCenter,
+              map: map,
+              icon: {
+                url:
+                  "data:image/svg+xml;charset=UTF-8," +
+                  encodeURIComponent(
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="30">
+                            <rect x="0" y="0" width="120" height="30" fill="${mainColor}" opacity="0.8" rx="5" ry="5"/>
+                            <text x="60" y="20" font-family="Arial" font-size="14" fill="white" text-anchor="middle">${tripId}</text>
+                        </svg>`
+                  ),
+                scaledSize: new google.maps.Size(120, 30),
+                anchor: new google.maps.Point(60, 15),
+              },
+              zIndex: google.maps.Marker.MAX_ZINDEX + 2,
+            });
+            currentTourNameLabels.push(textLabel);
+          }
+        }
+      }
+
+      function getPolygonCenter(points) {
+        if (!points || points.length === 0) return null;
+        let latSum = 0;
+        let lngSum = 0;
+        points.forEach((p) => {
+          latSum += p.lat;
+          lngSum += p.lng;
+        });
+        return { lat: latSum / points.length, lng: lngSum / points.length };
+      }
+
+      function clearMap() {
+        currentMarkers.forEach((marker) => marker.setMap(null));
+        currentPolylines.forEach((polyline) => polyline.setMap(null));
+        currentTripPolygonObjects.forEach((p) => p.setMap(null));
+        currentTourNameLabels.forEach((label) => label.setMap(null));
+        currentMarkers = [];
+        currentPolylines = [];
+        currentTripPolygonObjects = [];
+        currentTourNameLabels = [];
+        infoWindow.close();
+      }
+
+      function toggleMapVisibility() {
+        const showMarkers = document.getElementById("showMarkers").checked;
+        const showPolygons = document.getElementById("showPolygons").checked;
+        const showTourNames = document.getElementById("showTourNames").checked;
+        const showIneligibleBills = document.getElementById(
+          "showIneligibleBills"
+        ).checked;
+        const showUnallocatedBills = document.getElementById(
+          "showUnallocatedBills"
+        ).checked;
+        const showDirections =
+          document.getElementById("showDirections").checked; // New line
+
+        const filters = {
+          is_1L_Oil_lt_3Qty: document.getElementById("filter_1L_Oil_lt_3Qty")
+            .checked,
+          is_1L_Oil_lt_5Qty: document.getElementById("filter_1L_Oil_lt_5Qty")
+            .checked,
+          is_1L_Oil_gt_5Qty: document.getElementById("filter_1L_Oil_gt_5Qty")
+            .checked,
+          is_50Kg_Bag_lt_3Qty: document.getElementById(
+            "filter_50Kg_Bag_lt_3Qty"
+          ).checked,
+          is_50Kg_Bag_lt_5Qty: document.getElementById(
+            "filter_50Kg_Bag_lt_5Qty"
+          ).checked,
+          is_50Kg_Bag_gt_5Qty: document.getElementById(
+            "filter_50Kg_Bag_gt_5Qty"
+          ).checked,
+        };
+
+        const anyProductFilterActive = Object.values(filters).some(
+          (is_checked) => is_checked
+        );
+
+        // NEW: Check for active breach filters
+        const breachFilters = {
+          "Breach in <1hr": document.getElementById("filter_Breach_lt_1hr")
+            .checked,
+          "Breach in <2hr": document.getElementById("filter_Breach_lt_2hr")
+            .checked,
+          "Breach in <3hr": document.getElementById("filter_Breach_lt_3hr")
+            .checked,
+          "Breach >3hr": document.getElementById("filter_Breach_gt_3hr")
+            .checked,
+          "Already Breached": document.getElementById("filter_Already_Breached")
+            .checked,
+        };
+        const anyBreachFilterActive = Object.values(breachFilters).some(
+          (is_checked) => is_checked
+        );
+
+        currentMarkers.forEach((marker) => {
+          const isTourNameLabel = currentTourNameLabels.includes(marker);
+          const isIneligible = marker.visibilityType === "ineligible";
+          const isUnallocated = marker.visibilityType === "unallocated";
+          const isAllocated = marker.visibilityType === "allocated";
+          const isWh = marker.visibilityType === "whallocated";
+          let shouldShow = false;
+
+          if (isTourNameLabel) {
+            shouldShow = showTourNames;
+          } else if (isIneligible) {
+            shouldShow = showIneligibleBills;
+          } else if (isUnallocated) {
+            shouldShow = showUnallocatedBills;
+          } else if (isAllocated) {
+            shouldShow = showMarkers;
+          } else if (isWh) {
+            shouldShow = showMarkers;
+          }
+
+          // Apply product filters if any are active
+          // This is the line with the fix: `marker.bill?.product_flags`
+          if (anyProductFilterActive && shouldShow && marker.bill) {
+            let matchesFilter = false;
+            for (const filter in filters) {
+              if (
+                filters[filter] &&
+                marker.bill.product_flags &&
+                marker.bill.product_flags[filter]
+              ) {
+                matchesFilter = true;
+                break;
+              }
+            }
+            // FIX: Invert the logic to hide markers that match the filter
+            shouldShow = !matchesFilter;
+          }
+
+          if (anyBreachFilterActive && shouldShow && marker.bill) {
+            const markerBreachStatus = marker.bill.breach_status;
+            shouldShow = breachFilters[markerBreachStatus];
+          }
+
+          marker.setMap(shouldShow ? map : null);
+        });
+
+        directionsRenderers.forEach((renderer) => {
+          renderer.setMap(showDirections ? map : null);
+        });
+
+        // Toggle visibility of fallback polylines
+        currentPolylines.forEach((polyline) => {
+          polyline.setMap(showDirections ? map : null);
+        });
+
+        currentPolylines.forEach((polyline) => {
+          polyline.setMap(showMarkers ? map : null);
+        });
+        currentTripPolygonObjects.forEach((polygon) => {
+          polygon.setMap(showPolygons ? map : null);
+        });
+      }
+
+      function toggleMapStyle() {
+        const toggleCheckbox = document.getElementById("toggleMapStyle");
+        if (toggleCheckbox.checked) {
+          map.setOptions({ styles: DARK_MINIMAL_MAP_STYLE });
+        } else {
+          map.setOptions({ styles: LIGHT_MAP_STYLE });
+        }
+      }
+
+      function addVehicleRow() {
+        const tbody = document.querySelector("#vehicleConfigTable tbody");
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                <td><input type="text" class="form-control form-control-sm" value="" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="1000" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="100" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="1" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="20" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="1" min="0" required></td>
+                <td><button class="btn btn-sm btn-danger remove-vehicle">Remove</button></td>
+                `;
+        tbody.appendChild(newRow);
+        newRow
+          .querySelector(".remove-vehicle")
+          .addEventListener("click", function () {
+            this.closest("tr").remove();
+          });
+      }
+
+      function handleBillsUpload(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById("billsFile");
+        const statusDiv = document.getElementById("billsUploadStatus");
+        const uploadBillsModalElement =
+          document.getElementById("uploadBillsModal");
+        const uploadBillsModal = bootstrap.Modal.getInstance(
+          uploadBillsModalElement
+        );
+        const configModal = new bootstrap.Modal(
+          document.getElementById("configModal")
+        );
+        if (fileInput.files.length === 0) {
+          showError("Please select a file to upload.", statusDiv);
+          return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const csvContent = e.target.result;
+          const parsedData = parseCsvTo2DArray(csvContent);
+          if (parsedData.length < 1) {
+            showError("CSV file is empty or malformed.", statusDiv);
+            return;
+          }
+          currentBillsHeaders = parsedData[0];
+          currentBillsData = parsedData.slice(1);
+          console.log("Bills data loaded:", currentBillsData);
+          if (uploadBillsModal) {
+            uploadBillsModal.hide();
+          }
+          configModal.show();
+        };
+        reader.onerror = function () {
+          showError("Failed to read file.", statusDiv);
+        };
+        reader.readAsText(file);
+      }
+
+      function parseCsvTo2DArray(csvString) {
+        const rows = csvString
+          .split(/\r?\n/)
+          .filter((line) => line.trim() !== "");
+        return rows.map((row) => {
+          const result = [];
+          let inQuote = false;
+          let currentField = "";
+          for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+            if (char === '"') {
+              if (inQuote && row[i + 1] === '"') {
+                currentField += '"';
+                i++;
+              } else {
+                inQuote = !inQuote;
+              }
+            } else if (char === "," && !inQuote) {
+              result.push(currentField.trim());
+              currentField = "";
+            } else {
+              currentField += char;
+            }
+          }
+          result.push(currentField.trim());
+          return result;
+        });
+      }
+      function saveAndRunOptimization() {
+        // Get the vehicle configuration table from the DOM.
+        const table = document.getElementById("vehicleConfigTable");
+        if (!table) {
+          showError("Vehicle configuration table not found.");
+          return;
+        }
+
+        const rows = table.querySelectorAll("tbody tr");
+        if (rows.length === 0) {
+          showError("Please add at least one vehicle type.");
+          return;
+        }
+
+        const newVehicleConfig = [];
+        let hasError = false;
+
+        // Iterate through each row to collect and validate vehicle data.
+        rows.forEach((row) => {
+          const inputs = row.querySelectorAll("input");
+          const rowData = [];
+          inputs.forEach((input) => {
+            if (input.checkValidity()) {
+              input.classList.remove("is-invalid");
+              if (input.type === "number") {
+                rowData.push(parseFloat(input.value));
+              } else {
+                rowData.push(input.value);
+              }
+            } else {
+              hasError = true;
+              input.classList.add("is-invalid");
+            }
+          });
+
+          // Only push valid rows to the configuration list.
+          if (!hasError) {
+            // **New logic: Check if the vehicle has a non-zero availability.**
+            const availableCount = rowData[5]; // The 6th column (index 5) is "Available"
+            if (availableCount > 0) {
+              newVehicleConfig.push(rowData);
+            } else {
+              console.warn(
+                `Skipping vehicle type "${rowData[0]}" as its availability is 0.`
+              );
+            }
+          }
+        });
+
+        // Stop if any validation errors were found.
+        if (hasError) {
+          showError("Please fill in all required fields with valid values.");
+          return;
+        }
+
+        // Check if any vehicles are left after the availability filter.
+        if (newVehicleConfig.length === 0) {
+          showError(
+            'No vehicles are available. Please adjust the "Available" count to a non-zero value.',
+            document.getElementById("vehicleSaveStatus")
+          );
+          return;
+        }
+
+        // Collect all selected bill dispositions (e.g., 'Packed').
+        selectedDispositions = Array.from(
+          document.querySelectorAll(".disposition-checkbox:checked")
+        ).map((cb) => cb.value);
+        if (selectedDispositions.length === 0) {
+          showError("Please select at least one bill stage for optimization.");
+          return;
+        }
+
+        // Update the global vehicle configuration and hide the modal.
+        vehicleConfiguration = newVehicleConfig;
+        const configModal = bootstrap.Modal.getInstance(
+          document.getElementById("configModal")
+        );
+        if (configModal) {
+          configModal.hide();
+        }
+
+        // Start the timer for logging performance.
+        startTimeForLogging = new Date();
+
+        // Call the function that handles the actual optimization process.
+        // This is a crucial line. It calls the 'runOptimization1' function.
+        // runOptimization1(selectedDispositions);
+        transformAndSendBills(selectedDispositions);
+      }
+
+      function runOptimization1(dispositionsToInclude) {
+        // Check if there's bills data and vehicle configuration available.
+        if (!currentBillsData || currentBillsData.length === 0) {
+          showError(
+            "Please upload Bills CSV data first.",
+            document.getElementById("optimizationStatus")
+          );
+          return;
+        }
+        if (!vehicleConfiguration || vehicleConfiguration.length === 0) {
+          showError(
+            "Please configure and save vehicle types first.",
+            document.getElementById("optimizationStatus")
+          );
+          return;
+        }
+
+        // Set up the progress bar and status message on the user interface.
+        const progressContainer = document.getElementById(
+          "optimizationProgress"
+        );
+        const progressBar = document.getElementById("optimizationProgressBar");
+        const statusDiv = document.getElementById("optimizationStatus");
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        progressBar.classList.remove("bg-danger");
+        progressBar.classList.add("bg-success");
+        statusDiv.textContent = "Starting optimization...";
+
+        // Start a visual progress animation to give the user feedback.
+        let currentProgress = 0;
+        const progressInterval = setInterval(() => {
+          if (currentProgress < 95) {
+            currentProgress += 5;
+            progressBar.style.width = `${currentProgress}%`;
+            statusDiv.textContent = `Optimizing... (${currentProgress}%)`;
+          }
+        }, 1000);
+
+        // Filter bills on the client-side based on selected dispositions.
+        const billPropertyMap = {
+          id: "Order ID",
+          retailerId: "Retailer ID",
+          invoiceValue: "Bill Value",
+          dropName: "Drop Name",
+          dropContact: "Drop Contact",
+          dropAddress: "Drop Address",
+          dropLat: "Drop Latitude",
+          dropLng: "Drop Longitude",
+          disposition: "Disposition",
+          warehouse: "Warehouse",
+          weight: "Weight in Kg",
+          prodDesc: "prod_desc",
+          orderQty: "order_qty",
+        };
+        const dispositionIndex = currentBillsHeaders.indexOf(
+          billPropertyMap.disposition
+        );
+
+        const billsToOptimize = [];
+        allIneligibleBillsData = []; // Clear the old ineligible data.
+
+        currentBillsData.forEach((row) => {
+          const disposition = row[dispositionIndex];
+
+          // If the bill's disposition is not selected for optimization, mark it as ineligible.
+          if (!dispositionsToInclude.includes(disposition)) {
+            const ineligibleBill = {
+              id: row[currentBillsHeaders.indexOf(billPropertyMap.id)],
+              reason: `Disposition '${disposition}' is not selected for optimization.`,
+              lat: parseFloat(
+                row[currentBillsHeaders.indexOf(billPropertyMap.dropLat)]
+              ),
+              lng: parseFloat(
+                row[currentBillsHeaders.indexOf(billPropertyMap.dropLng)]
+              ),
+              warehouse:
+                row[currentBillsHeaders.indexOf(billPropertyMap.warehouse)],
+              retailerId:
+                row[currentBillsHeaders.indexOf(billPropertyMap.retailerId)],
+              weight: parseFloat(
+                row[currentBillsHeaders.indexOf(billPropertyMap.weight)]
+              ),
+              invoiceValue: parseFloat(
+                row[currentBillsHeaders.indexOf(billPropertyMap.invoiceValue)]
+              ),
+            };
+            allIneligibleBillsData.push(ineligibleBill);
+          } else {
+            // Otherwise, add it to the list to send to the server.
+            billsToOptimize.push(row);
+          }
+        });
+
+        // Handle the case where no bills are left to optimize.
+        if (billsToOptimize.length === 0) {
+          clearInterval(progressInterval);
+          const summary = {
+            totalBillsProcessed: currentBillsData.length,
+            totalBillsAllocated: 0,
+            unallocatedBillsCount: allIneligibleBillsData.length,
+          };
+          clearMap();
+          // NEW: Add product flags to ineligible bills and show filter box
+          allIneligibleBillsData = addProductFlagsToBills(
+            allIneligibleBillsData
+          );
+          document.getElementById("productFilters").style.display = "block";
+          drawIneligibleBillsOnMap(
+            allIneligibleBillsData,
+            new google.maps.LatLngBounds()
+          );
+          toggleMapVisibility();
+          renderOptimizationResults(summary);
+          renderUnallocatedBillsSummary(allIneligibleBillsData);
+          updateButtonRowLayout(true);
+          return;
+        }
+        console.log(billsToOptimize);
+        console.log(vehicleConfiguration);
+        console.log(currentBillsHeaders);
+        // This is the core call to the server-side function.
+        google.script.run
+          .withSuccessHandler(function (result) {
+            console.log(result);
+            clearInterval(progressInterval);
+            progressBar.style.width = "100%";
+
+            if (result.status === "success") {
+              showToast("Success", result.message, "success");
+
+              // FIX: Call addProductFlagsToBills on all bill lists returned by the server
+              allAllocatedBillsData = addProductFlagsToBills(
+                result.allocatedBills || []
+              );
+              allUnallocatedBillsData = addProductFlagsToBills(
+                result.unallocatedBills || []
+              );
+              allIneligibleBillsData = addProductFlagsToBills(
+                result.ineligibleBills || []
+              );
+
+              // Assign the enriched bills to the global variable
+              allBills = [
+                ...allAllocatedBillsData,
+                ...allUnallocatedBillsData,
+                ...allIneligibleBillsData,
+              ];
+
+              tripRoutes = result.tripRoutes || {};
+              allTripStats = result.tripStats || [];
+
+              rebuildLocalBillCaches();
+              updateTripDropdown();
+              showAllTrips();
+              renderOptimizationResults(result.summary);
+              renderTripStatsTable(allTripStats);
+              renderUnallocatedBillsSummary(
+                allUnallocatedBillsData.concat(allIneligibleBillsData)
+              );
+              updateButtonRowLayout(true);
+              // NEW: Show product filters after successful optimization
+              document.getElementById("productFilters").style.display = "block";
+              document.getElementById("breachFilters").style.display = "block";
+            } else {
+              progressBar.classList.remove("bg-success");
+              progressBar.classList.add("bg-danger");
+              showError(result.message, statusDiv);
+            }
+          })
+          .withFailureHandler(function (error) {
+            clearInterval(progressInterval);
+            progressBar.classList.remove("bg-success");
+            progressBar.classList.add("bg-danger");
+            showError(`Optimization failed: ${error.message}`, statusDiv);
+          })
+          .runOptimization1(
+            // The name of the server-side function to call.
+            JSON.stringify(billsToOptimize),
+            JSON.stringify(currentBillsHeaders),
+            JSON.stringify(vehicleConfiguration)
+          );
+      }
+
+      function addProductFlagsToBills(bills) {
+        if (!bills || bills.length === 0) {
+          return [];
+        }
+        // Regex for matching '1L' or '50Kg' with variations in spacing and casing
+        const L_regex = /\b1\s*l\b/i;
+        const Kg_regex = /\b50\s*kg\b/i;
+
+        return bills.map((bill) => {
+          const flags = {
+            is_1L_Oil_lt_3Qty: false,
+            is_1L_Oil_lt_5Qty: false,
+            is_1L_Oil_gt_5Qty: false,
+            is_50Kg_Bag_lt_3Qty: false,
+            is_50Kg_Bag_lt_5Qty: false,
+            is_50Kg_Bag_gt_5Qty: false,
+          };
+
+          if (bill.products) {
+            bill.products.forEach((product) => {
+              const desc = String(product.prod_desc || "");
+              const qty = parseInt(product.order_qty);
+
+              if (!isNaN(qty)) {
+                // Check for '1L' using the more flexible regex
+                if (L_regex.test(desc)) {
+                  if (qty < 3) flags.is_1L_Oil_lt_3Qty = true;
+                  if (qty < 5) flags.is_1L_Oil_lt_5Qty = true;
+                  if (qty >= 5) flags.is_1L_Oil_gt_5Qty = true;
+                }
+                // Check for '50Kg' using the more flexible regex
+                if (Kg_regex.test(desc)) {
+                  if (qty < 3) flags.is_50Kg_Bag_lt_1Qty = true;
+                  if (qty < 5) flags.is_50Kg_Bag_lt_5Qty = true;
+                  if (qty >= 5) flags.is_50Kg_Bag_gt_5Qty = true;
+                }
+              }
+            });
+          }
+          return { ...bill, product_flags: flags };
+        });
+      }
+
+      function rebuildLocalBillCaches() {
+        billsAtSameLocation = {};
+        billsByRetailer = {};
+        allBills.forEach((bill) => {
+          const locationKey = `${bill.lat},${bill.lng}`;
+          if (!billsAtSameLocation[locationKey]) {
+            billsAtSameLocation[locationKey] = [];
+          }
+          billsAtSameLocation[locationKey].push(bill);
+          if (bill.retailerId) {
+            if (!billsByRetailer[bill.retailerId]) {
+              billsByRetailer[bill.retailerId] = [];
+            }
+            billsByRetailer[bill.retailerId].push(bill);
+          }
+        });
+      }
+
+      function renderOptimizationResults(summary) {
+        const summaryContainer = document.getElementById("summaryContainer");
+        let summaryHtml = `
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Bills Processed</h5>
+                                <p class="card-text display-4 text-primary">${
+                                  summary.totalBillsProcessed
+                                }</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Bills Allocated</h5>
+                                <p class="card-text display-4 text-success">${
+                                  summary.totalBillsAllocated
+                                }</p>
+                                <p class="card-text text-muted">${Math.round(
+                                  (summary.totalBillsAllocated /
+                                    summary.totalBillsProcessed) *
+                                    100
+                                )}% Success Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card summary-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Bills Unallocated</h5>
+                                <p class="card-text display-4 text-danger">${
+                                  summary.unallocatedBillsCount
+                                }</p>
+                                <p class="card-text text-muted">${Math.round(
+                                  (summary.unallocatedBillsCount /
+                                    summary.totalBillsProcessed) *
+                                    100
+                                )}% Unallocated</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        summaryContainer.innerHTML = summaryHtml;
+      }
+
+      function renderTripStatsTable(tripStats) {
+        const container = document.getElementById("tripStatsContainer");
+        if (!tripStats || tripStats.length === 0) {
+          container.innerHTML =
+            '<div class="alert alert-info">No trip statistics data available.</div>';
+          return;
+        }
+        const headers = [
+          "Trip ID",
+          "Vehicle Type",
+          "Polygon Group",
+          "Bill Count",
+          "Total Weight (kg)",
+          "Total Distance (km)",
+          "Weight Util. (%)",
+          "Distance Util. (%)",
+        ];
+        let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                ${headers.map((h) => `<th>${h}</th>`).join("")}
+                            </tr>
+                        </thead>
+                        <tbody>`;
+        tripStats.forEach((trip) => {
+          html += `<tr>`;
+          html += `<td>${trip.tripId}</td>`;
+          html += `<td>${trip.vehicleType}</td>`;
+          html += `<td>${trip.polygonGroup || ""}</td>`;
+          html += `<td>${trip.billCount}</td>`;
+          html += `<td>${trip.totalWeightKg.toFixed(2)}</td>`;
+          html += `<td>${trip.totalDistanceKm.toFixed(2)}</td>`;
+          const weightUtilValue = parseFloat(trip.weightUtilization);
+          const distUtilValue = parseFloat(trip.distanceUtilization);
+          const getUtilColorClass = (value) => {
+            if (isNaN(value) || value <= 0) return "text-muted";
+            if (value > 80) return "text-success";
+            if (value > 50) return "text-warning";
+            return "text-danger";
+          };
+          html += `<td class="${getUtilColorClass(weightUtilValue)} fw-bold">${
+            isNaN(weightUtilValue) ? "0" : weightUtilValue.toFixed(2) + "%"
+          }</td>`;
+          html += `<td class="${getUtilColorClass(distUtilValue)} fw-bold">${
+            isNaN(distUtilValue) ? "0" : distUtilValue.toFixed(2) + "%"
+          }</td>`;
+          html += `</tr>`;
+        });
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 text-muted">Showing ${tripStats.length} trips</div>`;
+        container.innerHTML = html;
+      }
+
+      function renderUnallocatedBillsSummary(unallocatedBillsDetails) {
+        const container = document.getElementById("unallocatedBillsContainer");
+        if (!unallocatedBillsDetails || unallocatedBillsDetails.length === 0) {
+          container.innerHTML =
+            '<div class="alert alert-success text-center">All bills were successfully allocated!</div>';
+          return;
+        }
+        const reasons = {};
+        unallocatedBillsDetails.forEach((bill) => {
+          const reason = bill.reason || "Unknown Reason";
+          if (!reasons[reason]) {
+            reasons[reason] = [];
+          }
+          reasons[reason].push(bill.id);
+        });
+        let html = `
+                <div class="alert alert-warning text-center">
+                    <strong>${unallocatedBillsDetails.length}</strong> bills could not be allocated. See details below.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Reason</th>
+                                <th>Count</th>
+                                <th>Example Bill IDs</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+        for (const reason in reasons) {
+          const bills = reasons[reason];
+          const exampleBills =
+            bills.slice(0, 5).join(", ") +
+            (bills.length > 5 ? `... (${bills.length} total)` : "");
+          html += `
+                    <tr>
+                        <td>${reason}</td>
+                        <td>${bills.length}</td>
+                        <td>${exampleBills}</td>
+                    </tr>`;
+        }
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      }
+
+      function openIneligibleInfoWindow(ineligibleBill, position) {
+        const productsHtml = buildProductsListHtml(ineligibleBill.products);
+        const breachStatus = ineligibleBill.breach_status || "N/A";
+        const content = `
+      <div class="info-window-content">
+        <h6 style="font-size: 1.2em; color: #DC3545; margin-bottom: 5px;">Ineligible Bill</h6>
+        <p style="margin-bottom: 5px; color:black"><strong>Bill ID:</strong> ${ineligibleBill.id}</p>
+        <p style="margin-bottom: 5px; color:black"><strong>Breach Status:</strong> ${breachStatus}</p>
+        <p style="margin-bottom: 5px; color:black"><strong>Reason:</strong> ${ineligibleBill.unallocationReason}</p>
+        <div style="margin-top: 10px;">
+          <h6 style="font-size: 1em; margin-bottom: 5px;">Products:</h6>
+          ${productsHtml}
+        </div>
+      </div>
+    `;
+        infoWindow.setContent(content);
+        infoWindow.setPosition(position);
+        infoWindow.open(map);
+      }
+
+      function buildProductsListHtml(products) {
+        if (!products || products.length === 0) {
+          return '<p style="color:black" class="text-muted">No product information available.</p>';
+        }
+        let html =
+          '<ul style="color:black;padding-left: 20px; margin-bottom: 0;" class="info-window-product-list">';
+        products.forEach((product) => {
+          html += `<li>${product.prod_desc} (Qty: ${product.order_qty})</li>`;
+        });
+        html += "</ul>";
+        return html;
+      }
+
+      function openReassignInfoWindow(clickedBill, position) {
+        const currentTripId = clickedBill.tripId;
+        const isAllocated =
+          currentTripId &&
+          currentTripId !== "UNALLOCATED" &&
+          currentTripId !== "INELIGIBLE";
+        const locationKey = `${clickedBill.lat},${clickedBill.lng}`;
+        const billsInThisLocation = billsAtSameLocation[locationKey] || [
+          clickedBill,
+        ];
+        const isMultiBillMarker = billsInThisLocation.length > 1;
+        const idsToReassign = billsInThisLocation.map((b) => b.id);
+
+        let currentBillIndex = 0;
+
+        const updateView = () => {
+          const currentBill = billsInThisLocation[currentBillIndex];
+          const productsHtml = buildProductsListHtml(currentBill.products);
+          const productsContent = document.getElementById("productsContent");
+          const billDetailsContainer = document.getElementById("billDetails");
+          const billCounter = document.getElementById("billCounter");
+
+          // This is the key fix. It updates both the details and the product list.
+          billDetailsContainer.innerHTML = `
+              <h6 style="color: #007bff; margin-bottom: 5px;">Bill ID: ${
+                currentBill.id
+              }</h6>
+              <p style="margin: 0;">Retailer: ${currentBill.dropName}</p>
+              <p style="margin: 0;">Invoice Value: ${
+                typeof currentBill.invoiceValue === "number"
+                  ? currentBill.invoiceValue.toFixed(2)
+                  : "N/A"
+              }</p>
+              <p style="color: #EE4B2B;margin: 0;">Weight: ${
+                typeof currentBill.weight === "number"
+                  ? currentBill.weight.toFixed(2)
+                  : "N/A"
+              } kg</p>`;
+
+          productsContent.innerHTML = productsHtml;
+
+          if (isMultiBillMarker) {
+            billCounter.textContent = `Showing Bill ${
+              currentBillIndex + 1
+            } of ${billsInThisLocation.length}`;
+            document.getElementById("prevBillBtn").style.display =
+              currentBillIndex > 0 ? "inline-block" : "none";
+            document.getElementById("nextBillBtn").style.display =
+              currentBillIndex < billsInThisLocation.length - 1
+                ? "inline-block"
+                : "none";
+          }
+        };
+
+        let targetTripOptionsHtml =
+          '<option value="">-- Select Target Trip --</option>';
+        targetTripOptionsHtml +=
+          '<option value="NEW_TRIP">Create New Trip</option>';
+
+        // ... (rest of the HTML generation logic for trip and vehicle options) ...
+
+        const sortedTripIds = Object.keys(tripRoutes).sort((a, b) => {
+          const numA = parseInt(a.replace("Trip", ""));
+          const numB = parseInt(b.replace("Trip", ""));
+          return numA - numB;
+        });
+
+        sortedTripIds.forEach((tripId) => {
+          if (tripId !== currentTripId && tripId !== "undefined") {
+            targetTripOptionsHtml += `<option value="${tripId}">${tripId}</option>`;
+          }
+        });
+
+        if (isAllocated) {
+          targetTripOptionsHtml += `<option value="UNALLOCATE_ONLY">Unallocate Bill(s)</option>`;
+        }
+
+        let vehicleOptionsHtml =
+          '<option value="">-- Select Vehicle Type --</option>';
+        vehicleConfiguration.forEach((vehicle) => {
+          const vehicleType = vehicle[0];
+          vehicleOptionsHtml += `<option value="${vehicleType}">${vehicleType}</option>`;
+        });
+
+        const title = isAllocated
+          ? `Bill ID: ${clickedBill.id}`
+          : `Unallocated Bill: ${clickedBill.id}`;
+        const statusText = isAllocated
+          ? `Current: ${currentTripId}`
+          : `Reason: ${clickedBill.unallocationReason || "N/A"}`;
+        const breachStatus = clickedBill.breach_status || "N/A";
+        const billCountText = isMultiBillMarker
+          ? ` (${billsInThisLocation.length} Bills)`
+          : "";
+
+        const content = `
+        <div class="info-window-content">
+         <div style="border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px;">
+                ${
+                  isMultiBillMarker
+                    ? `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <button id="prevBillBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">&larr;</button>
+                        <span id="billCounter" style="color:black;font-size: 0.9em; text-align: center; flex-grow: 1; margin: 0 10px;"></span>
+                        <button id="nextBillBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">&rarr;</button>
+                    </div>
+                `
+                    : ``
+                }
+                <div id="billDetails" style="color:black; font-weight: bold; margin-bottom: 10px;"></div>
+                <h6 style="color:black; font-size: 1em; margin-bottom: 5px;">Products:</h6>
+                <div id="productsContent" style="max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 5px;"></div>
+            </div>
+
+            <div class="mb-2">
+                <label for="targetTripDropdownTooltip" class="form-label">Move to:</label>
+                <select id="targetTripDropdownTooltip" class="form-select form-select-sm">
+                    ${targetTripOptionsHtml}
+                </select>
+                <div id="newTripContainer" style="display: none; margin-top: 5px;">
+                    <input type="text" id="newTripName" class="form-control form-control-sm mb-2" placeholder="Enter new trip name" required>
+                    <select id="newTripVehicle" class="form-select form-select-sm" required>
+                        ${vehicleOptionsHtml}
+                    </select>
+                </div>
+            </div>
+            <button id="reassignBillBtnTooltip" class="btn btn-warning btn-sm w-100 mb-2">
+                ${
+                  isMultiBillMarker
+                    ? `Reassign All ${billsInThisLocation.length} Bills`
+                    : "Reassign Bill"
+                }
+            </button>
+            <div id="reassignStatusTooltip" class="status-message"></div>
+        </div>
+    `;
+
+        infoWindow.setContent(content);
+        infoWindow.setPosition(position);
+        infoWindow.open(map);
+
+        google.maps.event.addListenerOnce(infoWindow, "domready", () => {
+          updateView(); // Initial rendering of the first bill's data
+
+          if (isMultiBillMarker) {
+            document
+              .getElementById("prevBillBtn")
+              .addEventListener("click", () => {
+                if (currentBillIndex > 0) {
+                  currentBillIndex--;
+                  updateView();
+                }
+              });
+            document
+              .getElementById("nextBillBtn")
+              .addEventListener("click", () => {
+                if (currentBillIndex < billsInThisLocation.length - 1) {
+                  currentBillIndex++;
+                  updateView();
+                }
+              });
+          }
+
+          const reassignBtn = document.getElementById("reassignBillBtnTooltip");
+          const targetTripDd = document.getElementById(
+            "targetTripDropdownTooltip"
+          );
+          const newTripContainer = document.getElementById("newTripContainer");
+          const newTripNameInput = document.getElementById("newTripName");
+          const newTripVehicleDd = document.getElementById("newTripVehicle");
+          const statusDiv = document.getElementById("reassignStatusTooltip");
+
+          const updateButtonState = () => {
+            const selectedValue = targetTripDd.value;
+            const isNewTrip = selectedValue === "NEW_TRIP";
+            newTripContainer.style.display = isNewTrip ? "block" : "none";
+
+            let isReady = !!selectedValue;
+            if (isNewTrip) {
+              isReady = !!newTripNameInput.value && !!newTripVehicleDd.value;
+            }
+            reassignBtn.disabled = !isReady;
+          };
+
+          targetTripDd.addEventListener("change", updateButtonState);
+          newTripNameInput.addEventListener("input", updateButtonState);
+          newTripVehicleDd.addEventListener("change", updateButtonState);
+
+          reassignBtn.addEventListener("click", () => {
+            const targetValue = targetTripDd.value;
+
+            if (targetValue === "UNALLOCATE_ONLY") {
+              reassignSelectedBills(
+                idsToReassign,
+                "UNALLOCATED",
+                null,
+                statusDiv
+              );
+            } else if (targetValue === "NEW_TRIP") {
+              const newName = newTripNameInput.value.trim();
+              const newVehicle = newTripVehicleDd.value;
+              if (newName && newVehicle) {
+                reassignSelectedBills(
+                  idsToReassign,
+                  newName,
+                  newVehicle,
+                  statusDiv
+                );
+              } else {
+                showError(
+                  "Please enter a name and select a vehicle for the new trip.",
+                  statusDiv
+                );
+              }
+            } else {
+              reassignSelectedBills(
+                idsToReassign,
+                targetValue,
+                clickedBill.allocatedVehicle,
+                statusDiv
+              );
+            }
+          });
+          updateButtonState();
+        });
+      }
+
+      function reassignSelectedBills(
+        ids,
+        targetTripId,
+        newVehicleType,
+        statusDiv
+      ) {
+        if (!ids || ids.length === 0 || !targetTripId) {
+          showError("Invalid selection for reassignment.", statusDiv);
+          return;
+        }
+
+        statusDiv.innerHTML =
+          '<div class="alert alert-info">Processing...</div>';
+
+        // Temporarily disable the info window
+        infoWindow.close();
+
+        // Get the dynamic modal instance
+        const dynamicModalElement = document.getElementById("dynamicModal");
+        const dynamicModal = bootstrap.Modal.getInstance(dynamicModalElement);
+
+        showLoader();
+        // Call the server-side function
+        google.script.run
+          .withSuccessHandler(function (result) {
+            hideLoader();
+            console.log(result);
+            if (result.status === "success") {
+              showToast("Success", result.message, "success");
+
+              // Update client-side global variables
+              allBills = [
+                ...(result.allocatedBills || []),
+                ...(result.unallocatedBills || []),
+                ...(result.ineligibleBills || []),
+              ];
+              tripRoutes = result.tripRoutes || {};
+              allTripStats = result.tripStats || [];
+
+              rebuildLocalBillCaches();
+              updateTripDropdown();
+              showAllTrips(); // This will refresh the map
+              renderOptimizationResults(result.summary);
+              renderTripStatsTable(allTripStats);
+
+              const unallocatedForSummary = allBills.filter(
+                (b) => b.tripId === "UNALLOCATED" || b.tripId === "INELIGIBLE"
+              );
+              renderUnallocatedBillsSummary(unallocatedForSummary);
+
+              updateButtonRowLayout(true);
+            } else {
+              showToast("Error", result.message, "danger");
+            }
+            // --- FIX IS HERE ---
+            // Hide the modal using the Bootstrap API and remove its element from the DOM
+            if (dynamicModal) {
+              dynamicModal.hide();
+              dynamicModalElement.addEventListener(
+                "hidden.bs.modal",
+                function () {
+                  dynamicModalElement.remove();
+                }
+              );
+            }
+          })
+          .withFailureHandler(function (error) {
+            hideLoader();
+            showToast(
+              "Error",
+              `Backend update failed: ${error.message}`,
+              "danger"
+            );
+            // --- FIX IS ALSO HERE ---
+            // Hide the modal on failure as well
+            if (dynamicModal) {
+              dynamicModal.hide();
+              dynamicModalElement.addEventListener(
+                "hidden.bs.modal",
+                function () {
+                  dynamicModalElement.remove();
+                }
+              );
+            }
+          })
+          .reassignBillsBackend(
+            JSON.stringify(allBills),
+            JSON.stringify(ids),
+            targetTripId,
+            newVehicleType,
+            JSON.stringify(vehicleConfiguration)
+          );
+      }
+
+      function showSuccess(message, element) {
+        const targetElement =
+          element || document.querySelector(".container-fluid");
+        const alert = document.createElement("div");
+        //     alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+        alert.setAttribute("role", "alert");
+        alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+        if (element) {
+          element.innerHTML = "Success!!";
+        }
+        targetElement.prepend(alert);
+        setTimeout(() => {
+          if (alert.parentNode) alert.classList.remove("show");
+          setTimeout(() => {
+            if (alert.parentNode) alert.remove();
+          }, 1000);
+        }, 150);
+      }
+
+      function showError(message, element) {
+        const targetElement =
+          element || document.querySelector(".container-fluid");
+        const alert = document.createElement("div");
+        alert.className = "alert alert-danger alert-dismissible fade show mt-3";
+        alert.setAttribute("role", "alert");
+        alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+        if (element) {
+          element.innerHTML = "";
+        }
+        targetElement.prepend(alert);
+        setTimeout(() => {
+          if (alert.parentNode) alert.classList.remove("show");
+          setTimeout(() => {
+            if (alert.parentNode) alert.remove();
+          }, 7000);
+        }, 150);
+      }
+
+      function showToast(title, message, type = "info") {
+        const toastContainer = document.querySelector(".toast-container");
+        if (!toastContainer) {
+          console.error("Toast container not found!");
+          return;
+        }
+        const toastElement = document.createElement("div");
+        toastElement.className = `toast align-items-center text-white bg-${type} border-0`;
+        toastElement.setAttribute("role", "alert");
+        toastElement.setAttribute("aria-live", "assertive");
+        toastElement.setAttribute("aria-atomic", "true");
+        toastElement.innerHTML = `<div class="d-flex"><div class="toast-body"><strong>${title}:</strong> ${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
+        toastContainer.append(toastElement);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+      }
+
+      function logUsage(action, duration) {
+        const logData = {
+          timestamp: new Date().toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+          }),
+          action: action,
+          duration: duration,
+        };
+        google.script.run
+          .withSuccessHandler(function () {})
+          .withFailureHandler(function (error) {
+            console.error("Failed to log usage:", error.message);
+            showToast(
+              "Error",
+              `Failed to log usage: ${error.message}`,
+              "danger"
+            );
+          })
+          .logUsageToSheet(JSON.stringify(logData));
+      }
+
+      // Global variables
+      let selectionRectangle = null;
+      let selectedMarkers = [];
+      let isDragging = false;
+      let dragStartPoint = null;
+
+      let isDrawingPolygon = false;
+      let polygonPoints = [];
+      let drawingPolygon = null;
+      let polygonPointMarkers = [];
+
+      // New helper function to get the base icon object for a marker.
+      function getMarkerIcon(color, scale) {
+        return {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+          scale: scale,
+        };
+      }
+
+      function getTripColor(tripId) {
+        if (!tripId || tripId === "UNALLOCATED" || tripId === "INELIGIBLE") {
+          return "#000000"; // Black for unallocated or ineligible
+        }
+        const tripNumber = parseInt(tripId.replace("Trip", ""));
+        if (
+          isNaN(tripNumber) ||
+          tripNumber <= 0 ||
+          tripNumber > TRIP_COLORS.length
+        ) {
+          console.warn(
+            `Invalid tripId or out of bounds for color palette: ${tripId}. Using default color.`
+          );
+          return "#000000"; // Fallback to a default color (e.g., black)
+        }
+        const colorIndex = (tripNumber - 1) % TRIP_COLORS.length;
+        return TRIP_COLORS[colorIndex].main;
+      }
+
+      function enableDragSelect() {
+        // This listener starts/continues drawing a polygon on each map click.
+        google.maps.event.addListener(map, "click", function (event) {
+          if (!dragSelectEnabled) {
+            showToast(
+              "Success",
+              "Drag is disabled as final sequence is completed"
+            );
+            return;
+          }
+          if (!isDrawingPolygon) {
+            // Start a new polygon drawing session
+            isDrawingPolygon = true;
+            polygonPoints = [];
+
+            if (drawingPolygon) {
+              drawingPolygon.setMap(null);
+              drawingPolygon = null;
+            }
+            polygonPointMarkers.forEach((m) => m.setMap(null));
+            polygonPointMarkers = [];
+
+            // Clear the old selection and hide the summary
+            clearSelectedMarkers();
+            hideSelectionSummary();
+
+            map.setOptions({ draggableCursor: "crosshair" });
+          }
+
+          polygonPoints.push(event.latLng);
+
+          let pointMarker = new google.maps.Marker({
+            position: event.latLng,
+            map: map,
+            icon: {
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 5,
+              fillColor: "#00BFFF",
+              fillOpacity: 1,
+              strokeWeight: 1,
+              strokeColor: "#FFFFFF",
+            },
+            title: `Point ${polygonPoints.length}`,
+          });
+          polygonPointMarkers.push(pointMarker);
+
+          if (polygonPoints.length >= 2) {
+            if (drawingPolygon) {
+              drawingPolygon.setMap(null);
+            }
+            drawingPolygon = new google.maps.Polygon({
+              paths: polygonPoints,
+              strokeColor: "#00BFFF",
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: "#00BFFF",
+              fillOpacity: 0.2,
+              map: map,
+            });
+
+            updateSelectedMarkersInPolygon();
+          }
+
+          if (polygonPoints.length > 2) {
+            const firstPoint = polygonPoints[0];
+            const distance =
+              google.maps.geometry.spherical.computeDistanceBetween(
+                firstPoint,
+                event.latLng
+              );
+            if (distance < 50) {
+              completePolygonSelection();
+            }
+          }
+        });
+
+        google.maps.event.addListener(map, "dblclick", function (event) {
+          if (isDrawingPolygon && polygonPoints.length > 2) {
+            completePolygonSelection();
+          } else {
+            clearPolygonDrawing();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            clearPolygonDrawing();
+          }
+        });
+
+        document.addEventListener("click", function (event) {
+          const mapDiv = document.getElementById("map");
+          if (isDrawingPolygon && !mapDiv.contains(event.target)) {
+            if (polygonPoints.length > 2) {
+              completePolygonSelection();
+            } else {
+              clearPolygonDrawing();
+            }
+          }
+        });
+      }
+
+      let dragSelectEnabled = true;
+      function completePolygonSelection() {
+        isDrawingPolygon = false;
+        map.setOptions({ draggableCursor: null });
+
+        // Clear the temporary markers, but keep the polygon.
+        polygonPointMarkers.forEach((m) => m.setMap(null));
+        polygonPointMarkers = [];
+
+        if (drawingPolygon) {
+          // The selection logic has already run incrementally, so we just need to display the summary.
+          updateSelectedMarkersInPolygon();
+          displaySelectionSummary();
+        }
+      }
+
+      // Clears all elements related to the current polygon drawing session.
+      function clearPolygonDrawing() {
+        isDrawingPolygon = false;
+        map.setOptions({ draggableCursor: null });
+
+        if (drawingPolygon) {
+          drawingPolygon.setMap(null);
+          drawingPolygon = null;
+        }
+        polygonPointMarkers.forEach((m) => m.setMap(null));
+        polygonPointMarkers = [];
+
+        clearSelectedMarkers();
+        hideSelectionSummary();
+      }
+
+      function updateSelectedMarkersInPolygon() {
+        if (!drawingPolygon) return;
+
+        // Reset the visual state of all previously selected markers
+        clearSelectedMarkers();
+        const newlySelectedMarkers = [];
+
+        currentMarkers.forEach((marker) => {
+          const isSelectable =
+            marker.visibilityType === "allocated" ||
+            marker.visibilityType === "unallocated" ||
+            marker.visibilityType === "ineligible";
+          const position = marker.getPosition();
+
+          if (isSelectable && marker.map && position) {
+            // Check if the marker is inside the polygon
+            if (
+              google.maps.geometry.poly.containsLocation(
+                position,
+                drawingPolygon
+              )
+            ) {
+              const locationKey = `${position.lat()},${position.lng()}`;
+              const billsAtThisLocation = billsAtSameLocation[locationKey];
+
+              if (billsAtThisLocation && billsAtThisLocation.length > 1) {
+                // If it's a multi-bill marker, select all unique bills at this location
+                billsAtThisLocation.forEach((bill) => {
+                  const billMarker = currentMarkers.find(
+                    (m) => m.id === bill.id
+                  );
+                  if (
+                    billMarker &&
+                    !newlySelectedMarkers.includes(billMarker)
+                  ) {
+                    billMarker.setIcon(getMarkerIcon("#00BFFF", 12));
+                    newlySelectedMarkers.push(billMarker);
+                    console.log(newlySelectedMarkers);
+                  }
+                });
+              } else if (!newlySelectedMarkers.includes(marker)) {
+                // If it's a single bill, just select it
+                marker.setIcon(getMarkerIcon("#00BFFF", 12));
+                newlySelectedMarkers.push(marker);
+                console.log(newlySelectedMarkers);
+              }
+            }
+          }
+        });
+        selectedMarkers = newlySelectedMarkers;
+        displaySelectionSummary();
+      }
+
+      function updateSelectedMarkers() {
+        if (!selectionRectangle) {
+          console.log("No selection rectangle exists. Exiting.");
+          return;
+        }
+
+        const currentBounds = selectionRectangle.getBounds();
+        const ne = currentBounds.getNorthEast();
+        const sw = currentBounds.getSouthWest();
+
+        // Normalize the bounding box to ensure SW is always south-west and NE is north-east
+        const normalizedBounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(
+            Math.min(ne.lat(), sw.lat()),
+            Math.min(ne.lng(), sw.lng())
+          ),
+          new google.maps.LatLng(
+            Math.max(ne.lat(), sw.lat()),
+            Math.max(ne.lng(), sw.lng())
+          )
+        );
+
+        // Create a new array for markers found in this pass
+        const newlySelectedMarkers = [];
+
+        // Reset visual state of all markers to ensure only the new selection is highlighted
+        currentMarkers.forEach((marker) => {
+          const originalColor = getTripColor(marker.tripId);
+          const originalIcon = marker.getIcon();
+          if (
+            originalIcon.fillColor !== originalColor ||
+            originalIcon.scale !== 10
+          ) {
+            marker.setIcon({
+              ...originalIcon,
+              fillColor: originalColor,
+              scale: 10,
+            });
+          }
+        });
+
+        let markersFound = 0;
+
+        currentMarkers.forEach((marker) => {
+          const isSelectable =
+            marker.visibilityType === "allocated" ||
+            marker.visibilityType === "unallocated" ||
+            marker.visibilityType === "ineligible";
+          const position = marker.getPosition();
+
+          // FIX: Check if marker.map exists instead of marker.getVisible()
+          if (!isSelectable || !marker.map || !position) {
+            return; // Skip markers that are not on the map or not selectable
+          }
+
+          const isInsideRectangle = normalizedBounds.contains(position);
+
+          if (isInsideRectangle) {
+            markersFound++;
+            marker.setIcon(getMarkerIcon("#00BFFF", 12));
+            newlySelectedMarkers.push(marker);
+          }
+        });
+        selectedMarkers = newlySelectedMarkers;
+      }
+
+      function displaySelectionSummary() {
+        const totalBills = selectedMarkers.length;
+        let totalWeight = 0;
+
+        selectedMarkers.forEach((marker) => {
+          const bill = allBills.find((b) => b.id === marker.id);
+          if (bill && bill.weight) {
+            totalWeight += bill.weight;
+          }
+        });
+
+        // Remove any existing summary to prevent duplicates
+        hideSelectionSummary();
+
+        const summaryHtml = `
+        <div id="selectionSummary" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1002;">
+            <p style="color:black">Selected <strong>${totalBills}</strong> Bills</p>
+            <p style="color:black">Total Weight: <strong>${totalWeight.toFixed(
+              2
+            )}</strong> kg</p>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-success" id="reassignSelectedBtn">Reassign</button>
+                <button class="btn btn-sm btn-danger" id="unallocateSelectedBtn">Unallocate</button>
+                <button class="btn btn-sm btn-primary" id="createNewTripBtn">Create New Trip</button>
+            </div>
+        </div>
+    `;
+
+        document
+          .getElementById("map")
+          .insertAdjacentHTML("beforeend", summaryHtml);
+
+        // Attach event listeners to the newly created buttons
+        document
+          .getElementById("reassignSelectedBtn")
+          .addEventListener("click", openReassignModal);
+        document
+          .getElementById("unallocateSelectedBtn")
+          .addEventListener("click", unallocateSelectedBills);
+        document
+          .getElementById("createNewTripBtn")
+          .addEventListener("click", openCreateNewTripModal);
+      }
+
+      function openReassignModal() {
+        const selectedids = selectedMarkers.map((m) => m.id);
+        if (selectedids.length === 0) {
+          showToast("Please select at least one bill to reassign.");
+          return;
+        }
+
+        const modalTitle = `Reassign ${selectedids.length} Bill(s)`;
+        const modalBody = `
+        <p>Select an existing trip to reassign the selected bills to:</p>
+        <div class="mb-3">
+            <label for="modalReassignTripDropdown" class="form-label">Target Trip:</label>
+            <select id="modalReassignTripDropdown" class="form-select form-select-sm">
+                <option value="">-- Select Trip --</option>
+                ${Object.keys(tripRoutes)
+                  .map(
+                    (tripId) => `<option value="${tripId}">${tripId}</option>`
+                  )
+                  .join("")}
+            </select>
+        </div>
+        <div id="modalReassignStatus" class="status-message"></div>
+    `;
+
+        const modalFooter = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="modalReassignConfirmBtn" disabled>Reassign</button>
+    `;
+
+        showDynamicModal(modalTitle, modalBody, modalFooter);
+
+        const reassignDd = document.getElementById("modalReassignTripDropdown");
+        const confirmBtn = document.getElementById("modalReassignConfirmBtn");
+        const statusDiv = document.getElementById("modalReassignStatus");
+
+        reassignDd.addEventListener("change", () => {
+          confirmBtn.disabled = !reassignDd.value;
+        });
+
+        confirmBtn.addEventListener("click", () => {
+          const targetTripId = reassignDd.value;
+          if (targetTripId) {
+            const ids = selectedMarkers.map((m) => m.id);
+            reassignSelectedBills(ids, targetTripId, null, statusDiv);
+            document.getElementById("dynamicModal").remove();
+          }
+        });
+      }
+
+      function showDynamicModal(title, body, footer) {
+        // Remove any previous dynamic modal instance to prevent conflicts
+        const existingModal = document.getElementById("dynamicModal");
+        if (existingModal) {
+          existingModal.remove();
+        }
+
+        const modalHtml = `
+        <div class="modal fade" id="dynamicModal" tabindex="-1" aria-labelledby="dynamicModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-md modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="dynamicModalLabel">${title}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="dynamicModalBody">
+                        ${body}
+                    </div>
+                    <div class="modal-footer">
+                        ${footer}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Append the modal HTML to the body
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+        // Show the new modal using Bootstrap's JavaScript API
+        const dynamicModalElement = document.getElementById("dynamicModal");
+        const dynamicModal = new bootstrap.Modal(dynamicModalElement);
+        dynamicModal.show();
+      }
+
+      // A helper function to get the base icon object for a marker.
+      function getMarkerIcon(color, scale) {
+        return {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 2,
+          scale: scale,
+        };
+      }
+
+      // A global variable to store the original icons
+      let originalMarkerIcons = new Map();
+
+      function openCreateNewTripModal() {
+        const selectedids = selectedMarkers.map((m) => m.id);
+        if (selectedids.length === 0) {
+          showToast("Please select at least one bill to create a new trip.");
+          return;
+        }
+
+        const modalTitle = `Create New Trip with ${selectedids.length} Bill(s)`;
+        let vehicleOptionsHtml =
+          '<option value="">-- Select Vehicle Type --</option>';
+        vehicleConfiguration.forEach((vehicle) => {
+          const vehicleType = vehicle[0];
+          vehicleOptionsHtml += `<option value="${vehicleType}">${vehicleType}</option>`;
+        });
+
+        const modalBody = `
+        <p>Enter a name and select a vehicle for the new trip:</p>
+        <div class="mb-3">
+            <label for="newTripNameInput" class="form-label">Trip Name:</label>
+            <input type="text" id="newTripNameInput" class="form-control form-control-sm" placeholder="e.g., Trip_01" required>
+        </div>
+        <div class="mb-3">
+            <label for="newTripVehicleSelect" class="form-label">Vehicle Type:</label>
+            <select id="newTripVehicleSelect" class="form-select form-select-sm" required>
+                ${vehicleOptionsHtml}
+            </select>
+        </div>
+        <div id="modalNewTripStatus" class="status-message"></div>
+    `;
+
+        const modalFooter = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="modalCreateConfirmBtn" disabled>Create Trip</button>
+    `;
+
+        showDynamicModal(modalTitle, modalBody, modalFooter);
+
+        const nameInput = document.getElementById("newTripNameInput");
+        const vehicleSelect = document.getElementById("newTripVehicleSelect");
+        const confirmBtn = document.getElementById("modalCreateConfirmBtn");
+        const statusDiv = document.getElementById("modalNewTripStatus");
+
+        const checkValidity = () => {
+          confirmBtn.disabled = !(
+            nameInput.value.trim() && vehicleSelect.value
+          );
+        };
+
+        nameInput.addEventListener("input", checkValidity);
+        vehicleSelect.addEventListener("change", checkValidity);
+
+        confirmBtn.addEventListener("click", () => {
+          const newTripName = nameInput.value.trim();
+          const newVehicleType = vehicleSelect.value;
+
+          if (newTripName && newVehicleType) {
+            const ids = selectedMarkers.map((m) => m.id);
+            reassignSelectedBills(ids, newTripName, newVehicleType, statusDiv);
+            document.getElementById("dynamicModal").remove();
+          } else {
+            showError("Please fill in all fields.", statusDiv);
+          }
+        });
+      }
+
+      function unallocateSelectedBills() {
+        const selectedids = selectedMarkers.map((m) => m.id);
+        if (selectedids.length === 0) {
+          showToast("Please select at least one bill to unallocate.");
+          return;
+        }
+
+        const modalTitle = `Unallocate ${selectedids.length} Bill(s)`;
+        const modalBody = `<p>Are you sure you want to unallocate the selected bills?</p>`;
+        const modalFooter = `
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="modalUnallocateConfirmBtn">Unallocate</button>
+    `;
+
+        showDynamicModal(modalTitle, modalBody, modalFooter);
+
+        document
+          .getElementById("modalUnallocateConfirmBtn")
+          .addEventListener("click", () => {
+            const statusDiv = document.createElement("div");
+            statusDiv.id = "unallocateStatus";
+            document.getElementById("dynamicModalBody").appendChild(statusDiv);
+            reassignSelectedBills(selectedids, "UNALLOCATED", null, statusDiv);
+            document.getElementById("dynamicModal").remove();
+          });
+      }
+
+      function clearSelectedMarkers() {
+        selectedMarkers.forEach((marker) => {
+          const originalColor = getTripColor(marker.tripId);
+          const originalIcon = marker.getIcon();
+          if (
+            originalIcon.fillColor !== originalColor ||
+            originalIcon.scale !== 10
+          ) {
+            marker.setIcon({
+              ...originalIcon,
+              fillColor: originalColor,
+              scale: 10,
+            });
+          }
+        });
+        selectedMarkers = [];
+      }
+
+      // This function removes the semi-transparent rectangle from the map
+      function clearSelectionRectangle() {
+        if (selectionRectangle) {
+          selectionRectangle.setMap(null);
+          selectionRectangle = null;
+        }
+      }
+
+      // This function hides the floating summary box
+      function hideSelectionSummary() {
+        const summary = document.getElementById("selectionSummary");
+        if (summary) {
+          summary.remove();
+        }
+      }
+
+      // =====================================================
+      // ================== BISHWA'S CODE ====================
+      // =====================================================
+
+      function generateVehicleNumber() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const randomDistCode = Math.floor(Math.random() * 9999)
+          .toString()
+          .padStart(2, "0");
+        const randomLetters =
+          letters[Math.floor(Math.random() * 26)] +
+          letters[Math.floor(Math.random() * 26)];
+        const randomNumbers = Math.floor(Math.random() * 9999)
+          .toString()
+          .padStart(4, "0");
+        return `KA${randomDistCode}${randomLetters}${randomNumbers}`;
+      }
+
+      function mapVehicleType(originalType) {
+        const mapping = {
+          Truck: "TATA_ACE_4W",
+          EV: "EV_3W",
+          Bike: "BIKE_2W",
+        };
+        return mapping[originalType] || originalType;
+      }
+
+      function createVehiclesList(vehicleConfig) {
+        const vehicles = [];
+
+        vehicleConfig.forEach((config) => {
+          const [type, capacity, distance, minBills, maxBills, available] =
+            config;
+          const mappedType = mapVehicleType(type);
+
+          // Create multiple instances based on 'available' count
+          for (let i = 0; i < available; i++) {
+            vehicles.push({
+              vehicle_type: mappedType,
+              registration_number: generateVehicleNumber(),
+              max_distance: distance * 1000,
+              capacity: capacity,
+            });
+          }
+        });
+
+        return vehicles;
+      }
+
+      function parseDataToObjects(data) {
+        if (!data || data.length < 1) {
+          return [];
+        }
+
+        const headers = data[0];
+
+        const rows = data.slice(1);
+
+        return rows.map((row) => {
+          const obj = {};
+
+          headers.forEach((header, index) => {
+            obj[header] = row[index];
+          });
+
+          return obj;
+        });
+      }
+
+      function formatApiResponse(apiResponse, originalData) {
+        // Helper function to compute convex hull
+        function computeConvexHull(points) {
+          // Graham's scan algorithm for convex hull
+          function cross(o, a, b) {
+            return (
+              (a.lat - o.lat) * (b.lng - o.lng) -
+              (a.lng - o.lng) * (b.lat - o.lat)
+            );
+          }
+
+          points = points.slice(); // Clone array
+          points.sort((a, b) => a.lat - b.lat || a.lng - b.lng);
+
+          let lower = [];
+          for (let i = 0; i < points.length; i++) {
+            while (
+              lower.length >= 2 &&
+              cross(
+                lower[lower.length - 2],
+                lower[lower.length - 1],
+                points[i]
+              ) <= 0
+            ) {
+              lower.pop();
+            }
+            lower.push(points[i]);
+          }
+
+          let upper = [];
+          for (let i = points.length - 1; i >= 0; i--) {
+            while (
+              upper.length >= 2 &&
+              cross(
+                upper[upper.length - 2],
+                upper[upper.length - 1],
+                points[i]
+              ) <= 0
+            ) {
+              upper.pop();
+            }
+            upper.push(points[i]);
+          }
+
+          upper.pop();
+          lower.pop();
+          return lower.concat(upper);
+        }
+
+        // Initialize the response structure
+        const formattedResponse = {
+          allocatedBills: [],
+          summary: {
+            totalBillsProcessed:
+              apiResponse.deliveries.length +
+              apiResponse.dropped_deliveries.length,
+            totalBillsAllocated: 0,
+            unallocatedBillsCount: apiResponse.dropped_deliveries.length,
+          },
+          unallocatedBills: [],
+          tripStats: [],
+          tripRoutes: {},
+          ineligibleBills: [],
+          message: apiResponse.report,
+          status: "success",
+        };
+
+        // Create a map of original data for quick lookup
+        const originalDataMap = {};
+        const data = parseDataToObjects([
+          currentBillsHeaders,
+          ...currentBillsData,
+        ]);
+
+        data.forEach((row) => {
+          originalDataMap[row["Order ID"]] = row;
+        });
+
+        // Process allocated bills
+        apiResponse.deliveries.forEach((delivery) => {
+          const originalBill = originalDataMap[delivery.id] || {};
+          console.log(originalBill);
+          const formattedBill = {
+            ...originalBill,
+            id: delivery.id,
+            weight: parseFloat(originalBill["Weight in Kg"] || 0),
+            warehouse: originalBill["Warehouse"] || "",
+            invoiceValue: parseFloat(originalBill["Bill Value"] || 0),
+            dropName: originalBill["Drop Name"] || "",
+
+            tripId:
+              delivery.vehicle_id !== undefined
+                ? `Trip${delivery.vehicle_id + 1}`
+                : "UNALLOCATED",
+            allocatedVehicle: delivery.vehicle_type
+              ? delivery.vehicle_type.split("_")[0]
+              : "",
+            deliverySequence: delivery.sequence || "",
+
+            breach_status: (() => {
+              const pd = delivery.pd;
+              const [dateStr, timeStr] = pd.split(" ");
+              const [day, month, year] = dateStr.split("/");
+              const [hours, minutes] = timeStr.split(":");
+              const promisedDate = new Date(
+                20 + year,
+                month - 1,
+                day,
+                hours,
+                minutes
+              );
+
+              const [currentHours, currentMinutes] =
+                originalData.solver_params.current_time.split(":");
+              const currentDate = new Date();
+              currentDate.setHours(
+                parseInt(currentHours),
+                parseInt(currentMinutes),
+                0,
+                0
+              );
+
+              const diffHours = (promisedDate - currentDate) / (1000 * 60 * 60);
+
+              if (diffHours < 0) {
+                return "Already Breached";
+              } else if (diffHours <= 1) {
+                return "Breach in <1hr";
+              } else if (diffHours <= 2) {
+                return "Breach in <2hr";
+              } else if (diffHours <= 3) {
+                return "Breach in <3hr";
+              } else {
+                return "Breach >3hr";
+              }
+            })(),
+
+            lat: delivery.lat,
+            lng: delivery.lng,
+          };
+
+          formattedResponse.allocatedBills.push(formattedBill);
+          formattedResponse.summary.totalBillsAllocated++;
+        });
+
+        // Process un-allocated bills
+        apiResponse.dropped_deliveries.forEach((delivery) => {
+          const originalBill = originalDataMap[delivery.id] || {};
+          const formattedBill = {
+            ...originalBill,
+            id: delivery.id,
+            weight: parseFloat(originalBill["Weight in Kg"] || 0),
+            warehouse: originalBill["Warehouse"] || "",
+            invoiceValue: parseFloat(originalBill["Bill Value"] || 0),
+            dropName: originalBill["Drop Name"] || "",
+            tripId:
+              delivery.vehicle_id !== undefined
+                ? `Trip${delivery.vehicle_id + 1}`
+                : "UNALLOCATED",
+            allocatedVehicle: delivery.vehicle_type
+              ? delivery.vehicle_type.split("_")[0]
+              : "",
+            deliverySequence: delivery.sequence || "",
+            breach_status: (() => {
+              const pd = delivery.pd;
+              const [dateStr, timeStr] = pd.split(" ");
+              const [day, month, year] = dateStr.split("/");
+              const [hours, minutes] = timeStr.split(":");
+              const promisedDate = new Date(
+                20 + year,
+                month - 1,
+                day,
+                hours,
+                minutes
+              );
+
+              const [currentHours, currentMinutes] =
+                originalData.solver_params.current_time.split(":");
+              const currentDate = new Date();
+              currentDate.setHours(
+                parseInt(currentHours),
+                parseInt(currentMinutes),
+                0,
+                0
+              );
+
+              const diffHours = (promisedDate - currentDate) / (1000 * 60 * 60);
+
+              if (diffHours < 0) {
+                return "Already Breached";
+              } else if (diffHours <= 1) {
+                return "Breach in <1hr";
+              } else if (diffHours <= 2) {
+                return "Breach in <2hr";
+              } else if (diffHours <= 3) {
+                return "Breach in <3hr";
+              } else {
+                return "Breach >3hr";
+              }
+            })(),
+
+            lat: delivery.lat,
+            lng: delivery.lng,
+          };
+
+          formattedResponse.unallocatedBills.push({
+            ...formattedBill,
+            unallocationReason: "Could not fit into any available trip.",
+          });
+        });
+
+        // Process vehicles/trips
+        apiResponse.vehicles.forEach((vehicle, index) => {
+          const tripId = `Trip${index + 1}`;
+          const deliveryPoints = vehicle.delivery_ids.map((id) => {
+            const delivery =
+              apiResponse.deliveries.find((d) => d.id === id) ??
+              apiResponse.dropped_deliveries.find((d) => d.id === id);
+            return { lat: delivery.lat, lng: delivery.lng };
+          });
+
+          // Compute convex hull for polygon points
+          const polygonPoints = computeConvexHull(deliveryPoints);
+
+          // Create trip routes
+          formattedResponse.tripRoutes[tripId] = {
+            polygonPoints,
+            route: [
+              {
+                sequence: 0,
+                lng: originalData.warehouse.longitude,
+                lat: originalData.warehouse.latitude,
+                type: "warehouse",
+                warehouseName: originalData.warehouse.name,
+                vehicleType: vehicle.vehicle_type.split("_")[0],
+              },
+              ...vehicle.delivery_ids
+                .map((id, idx) => {
+                  const delivery =
+                    apiResponse.deliveries.find((d) => d.id === id) ??
+                    apiResponse.dropped_deliveries.find((d) => d.id === id);
+                  return {
+                    sequence: idx + 1,
+                    lng: delivery.lng,
+                    lat: delivery.lat,
+                    type: "delivery",
+                    billId: delivery.id,
+                    vehicleType: vehicle.vehicle_type.split("_")[0],
+                  };
+                })
+                .filter(Boolean),
+            ],
+            billCount: vehicle.delivery_ids.length,
+            vehicleType: vehicle.vehicle_type.split("_")[0],
+          };
+
+          // Add trip stats
+          formattedResponse.tripStats.push({
+            tripId,
+            vehicleType: vehicle.vehicle_type.split("_")[0], // e.g., "TATA" from "TATA_ACE_4W_60000_800"
+            polygonGroup: `H${index + 1}`,
+            billCount: vehicle.delivery_ids.length,
+            totalWeightKg: vehicle.total_load,
+            totalDistanceKm: vehicle.total_distance / 1000,
+            weightUtilization: (() => {
+              const capacity = parseInt(vehicle.vehicle_type.split("_").pop());
+              return (vehicle.total_load / capacity) * 100;
+            })(),
+            distanceUtilization: (() => {
+              const maxDistance = parseInt(
+                vehicle.vehicle_type.split("_").slice(-2, -1)[0]
+              );
+              return (vehicle.total_distance / maxDistance) * 100;
+            })(),
+            warehouseLat: originalData.warehouse.latitude,
+            warehouseLng: originalData.warehouse.longitude,
+            furthestPointSeeded: true,
+            tspOptimized: true,
+          });
+        });
+
+        return formattedResponse;
+      }
+
+      function transformAndSendBills(dispositionsToInclude) {
+        if (!currentBillsData || currentBillsData.length === 0) {
+          showError("Please upload Bills CSV data first.");
+          return;
+        }
+
+        // Get the solver parameters from the configuration form
+        const warehouseStartTime =
+          document.getElementById("warehouseStartTime").value || "08:00";
+        const warehouseEndTime =
+          document.getElementById("warehouseEndTime").value || "18:00";
+        const useCurrentTime =
+          document.getElementById("useCurrentTime").checked;
+        const tripStartTime =
+          document.getElementById("tripStartTime").value || "08:00";
+        const serviceTime = parseInt(
+          document.getElementById("serviceTime").value || "5"
+        );
+        const avgSpeed = parseInt(
+          document.getElementById("avgSpeed").value || "15"
+        );
+        const optimizingTimeLimit = parseInt(
+          document.getElementById("optimizingTimeLimit").value || "20"
+        );
+        const useHaversine = document.getElementById("useHaversine").checked;
+        const enforceAllDeliveries = document.getElementById(
+          "enforceAllDeliveries"
+        ).checked;
+        const enableTimeWindows =
+          document.getElementById("enableTimeWindows").checked;
+
+        const warehouse = {
+          name: "Kanakapura",
+          city: "Bangalore",
+          latitude: 12.884346550039323,
+          longitude: 77.55978971792676,
+          operating_hours: {
+            start: warehouseStartTime,
+            end: warehouseEndTime,
+          },
+          config: {
+            average_speed: avgSpeed,
+            service_time: serviceTime,
+          },
+        };
+
+        const fields = {
+          id: "Order ID",
+          loc: "Location ID",
+          st: "Customer Slot Start",
+          et: "Customer Slot End",
+          lat: "Customer Location Latitude",
+          lng: "Customer Location Longitude",
+          amt: "Amount",
+          wt: "Weight",
+          wu: "Weight Unit",
+          pd: "Customer Promised Date",
+          sz: "Size",
+        };
+
+        let currentTime;
+        if (useCurrentTime) {
+          currentTime = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        } else {
+          currentTime = tripStartTime;
+        }
+
+        const solver_params = {
+          current_time: currentTime,
+          use_haversine: useHaversine,
+          enforce_all_deliveries: enforceAllDeliveries,
+          enable_time_windows: enableTimeWindows,
+          optimizing_time_limit: optimizingTimeLimit,
+        };
+
+        // Map column indices
+        const headerIndices = {
+          orderId: currentBillsHeaders.indexOf("Order ID"),
+          retailerId: currentBillsHeaders.indexOf("Retailer ID"),
+          dropLat: currentBillsHeaders.indexOf("Drop Latitude"),
+          dropLng: currentBillsHeaders.indexOf("Drop Longitude"),
+          billValue: currentBillsHeaders.indexOf("Bill Value"),
+          weight: currentBillsHeaders.indexOf("Weight in Kg"),
+          billTime: currentBillsHeaders.indexOf("Bill Created At"),
+          dropStartTime: currentBillsHeaders.indexOf("Drop Start Time"),
+          dropEndTime: currentBillsHeaders.indexOf("Drop End Time"),
+          disposition: currentBillsHeaders.indexOf("Disposition"),
+        };
+
+        // Validate all required fields are present
+        for (const [key, value] of Object.entries(headerIndices)) {
+          if (value === -1) {
+            showError(`Required column ${key} not found in CSV.`);
+            return;
+          }
+        }
+
+        const formatDateTime = (date) => {
+          const day = date.getDate().toString().padStart(2, "0");
+          const month = (date.getMonth() + 1).toString().padStart(2, "0");
+          const year = date.getFullYear().toString().slice(-2);
+          const hours = date.getHours().toString().padStart(2, "0");
+          const minutes = date.getMinutes().toString().padStart(2, "0");
+          return `${day}/${month}/${year} ${hours}:${minutes}`;
+        };
+
+        const transformedBills = currentBillsData
+          .filter((row) =>
+            dispositionsToInclude.includes(row[headerIndices.disposition])
+          )
+          .map((row) => {
+            const billTimeStr = row[headerIndices.billTime];
+
+            const [day, month, year] = billTimeStr.split(" ")[0].split("-");
+            const formattedBillDate = `${day}/${month}/${year}`;
+
+            const billDateTime = new Date(billTimeStr);
+            const warehouseStartDt = new Date(
+              `${billTimeStr.split(" ")[0]}T${warehouseStartTime}:00`
+            );
+            const today = new Date();
+            const isYesterday = billDateTime.getDate() < today.getDate();
+            const isBeforeWarehouseStart =
+              !isYesterday && billDateTime < warehouseStartDt;
+
+            // Calculate promised date
+            let promisedDate = new Date(formattedBillDate);
+            if (isYesterday || isBeforeWarehouseStart) {
+              promisedDate.setHours(11, 0, 0, 0);
+            } else {
+              promisedDate = new Date(
+                billDateTime.getTime() + 4 * 60 * 60 * 1000
+              );
+            }
+
+            // Parse slot times
+            const baseDate = isYesterday ? today : new Date(formattedBillDate);
+            const startTimeStr = row[headerIndices.dropStartTime];
+            const endTimeStr = row[headerIndices.dropEndTime];
+
+            const parseTimeSlot = (timeStr) => {
+              const [time, period] = timeStr.split(" ");
+              let [hours, minutes] = time.split(":").map(Number);
+
+              if (period === "PM" && hours !== 12) {
+                hours += 12;
+              } else if (period === "AM" && hours === 12) {
+                hours = 0;
+              }
+
+              return { hours, minutes };
+            };
+
+            const startTime = parseTimeSlot(startTimeStr);
+            const endTime = parseTimeSlot(endTimeStr);
+
+            const slotStart = new Date(baseDate);
+            slotStart.setHours(startTime.hours, startTime.minutes, 0, 0);
+
+            const slotEnd = new Date(baseDate);
+            slotEnd.setHours(endTime.hours, endTime.minutes, 0, 0);
+
+            const weight = parseFloat(row[headerIndices.weight]) || 0;
+            let size;
+            if (weight <= 10) size = 0;
+            else if (weight <= 50) size = 1;
+            else size = 2;
+
+            // Format amount with commas
+            const formattedAmount = parseFloat(row[headerIndices.billValue])
+              .toString()
+              .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+            return {
+              id: row[headerIndices.orderId],
+              loc: row[headerIndices.retailerId],
+              st: formatDateTime(slotStart),
+              et: formatDateTime(slotEnd),
+              lat: parseFloat(row[headerIndices.dropLat]) || 0,
+              lng: parseFloat(row[headerIndices.dropLng]) || 0,
+              amt: formattedAmount,
+              wt: weight,
+              wu: "KG",
+              pd: formatDateTime(promisedDate),
+              sz: size,
+            };
+          });
+
+        if (transformedBills.length === 0) {
+          showError("No bills match the selected dispositions.");
+          return;
+        }
+
+        const requestPayload = {
+          warehouse: warehouse,
+          vehicles: createVehiclesList(vehicleConfiguration),
+          fields: fields,
+          deliveries: transformedBills,
+          solver_params: solver_params,
+        };
+
+        // console.log(requestPayload);
+
+        // Send API request
+        const API = "https://backend.hermes.sahoobishwajeet.xyz";
+        fetch(`${API}/api/v1/routing/solve`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestPayload),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // console.log("API Response:", data);
+            const formattedResponse = formatApiResponse(data, requestPayload);
+            // console.log("Formatted Response:", formattedResponse);
+
+            // Update global variables with formatted data
+            allAllocatedBillsData = formattedResponse.allocatedBills;
+            allUnallocatedBillsData = formattedResponse.unallocatedBills;
+            allIneligibleBillsData = formattedResponse.ineligibleBills;
+
+            allBills = [
+              ...allAllocatedBillsData,
+              ...allUnallocatedBillsData,
+              ...allIneligibleBillsData,
+            ];
+
+            tripRoutes = formattedResponse.tripRoutes;
+            allTripStats = formattedResponse.tripStats;
+
+            // Trigger UI updates
+            rebuildLocalBillCaches();
+            updateTripDropdown();
+            showAllTrips();
+            renderOptimizationResults(formattedResponse.summary);
+            renderTripStatsTable(formattedResponse.tripStats);
+            renderUnallocatedBillsSummary(formattedResponse.unallocatedBills);
+            updateButtonRowLayout(true);
+            document.getElementById("productFilters").style.display = "block";
+            document.getElementById("breachFilters").style.display = "block";
+
+            showToast("Success", "Optimization request completed", "success");
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            showError("Failed to send optimization request: " + error.message);
+          });
+      }
+    </script>
+  </body>
+</html>
