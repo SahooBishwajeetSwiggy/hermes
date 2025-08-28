@@ -766,6 +766,8 @@
                       <th>Min Bills</th>
                       <th>Max Bills</th>
                       <th>Available</th>
+                      <th>Fixed Cost (₹)</th>
+                      <th>Cost per km (₹)</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -820,6 +822,24 @@
                           type="number"
                           class="form-control form-control-sm available-count-input"
                           value="0"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm fixed-cost-input"
+                          value="1000"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm per-km-cost-input"
+                          value="2"
                           min="0"
                           required
                         />
@@ -885,6 +905,24 @@
                         />
                       </td>
                       <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm fixed-cost-input"
+                          value="1000"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm per-km-cost-input"
+                          value="2"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
                         <button class="btn btn-sm btn-danger remove-vehicle">
                           Remove
                         </button>
@@ -940,6 +978,24 @@
                           type="number"
                           class="form-control form-control-sm available-count-input"
                           value="0"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm fixed-cost-input"
+                          value="1000"
+                          min="0"
+                          required
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="form-control form-control-sm per-km-cost-input"
+                          value="2"
                           min="0"
                           required
                         />
@@ -1050,6 +1106,69 @@
                     value="20"
                     min="15"
                     max="40"
+                    required
+                  />
+                </div>
+              </div>
+              <h5 class="mb-3">Solver Penalty Parameters</h5>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="profitMargin" class="form-label"
+                    >Profit Margin (%) - Priority to High Value Bills</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="profitMargin"
+                    value="10"
+                    min="0"
+                    max="100"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="bufferMultiplier" class="form-label"
+                    >Buffer Multiplier - Uncertanity in Delivery Time</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="bufferMultiplier"
+                    value="1.5"
+                    min="1"
+                    step="0.1"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="timeIntervalMinutes" class="form-label"
+                    >Time Interval (minutes) - Breach Time Penalty Interval</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="timeIntervalMinutes"
+                    value="15"
+                    min="1"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="penaltyPerInterval" class="form-label"
+                    >Penalty Per Interval</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control form-control-sm"
+                    id="penaltyPerInterval"
+                    value="30"
+                    min="0"
                     required
                   />
                 </div>
@@ -2804,6 +2923,8 @@
                 <td><input type="number" class="form-control form-control-sm" value="1" min="1" required></td>
                 <td><input type="number" class="form-control form-control-sm" value="20" min="1" required></td>
                 <td><input type="number" class="form-control form-control-sm" value="1" min="0" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="1000" min="0" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="2" min="0" required></td>
                 <td><button class="btn btn-sm btn-danger remove-vehicle">Remove</button></td>
                 `;
         tbody.appendChild(newRow);
@@ -3279,8 +3400,10 @@
           "Bill Count",
           "Total Weight (kg)",
           "Total Distance (km)",
+          "Total Cost",
+          "Cost per Delivery",
           "Weight Util. (%)",
-          "Distance Util. (%)",
+          "Distance Util. (%)"
         ];
         let html = `
                 <div class="table-responsive">
@@ -3299,6 +3422,8 @@
           html += `<td>${trip.billCount}</td>`;
           html += `<td>${trip.totalWeightKg.toFixed(2)}</td>`;
           html += `<td>${trip.totalDistanceKm.toFixed(2)}</td>`;
+          html += `<td>${trip.totalCost.toFixed(2)}</td>`;
+          html += `<td>${trip.costPerDelivery.toFixed(2)}</td>`;
           const weightUtilValue = parseFloat(trip.weightUtilization);
           const distUtilValue = parseFloat(trip.distanceUtilization);
           const getUtilColorClass = (value) => {
@@ -4011,14 +4136,14 @@
                   ) {
                     billMarker.setIcon(getMarkerIcon("#00BFFF", 12));
                     newlySelectedMarkers.push(billMarker);
-                    console.log(newlySelectedMarkers);
+                    // console.log(newlySelectedMarkers);
                   }
                 });
               } else if (!newlySelectedMarkers.includes(marker)) {
                 // If it's a single bill, just select it
                 marker.setIcon(getMarkerIcon("#00BFFF", 12));
                 newlySelectedMarkers.push(marker);
-                console.log(newlySelectedMarkers);
+                // console.log(newlySelectedMarkers);
               }
             }
           }
@@ -4393,8 +4518,16 @@
         const vehicles = [];
 
         vehicleConfig.forEach((config) => {
-          const [type, capacity, distance, minBills, maxBills, available] =
-            config;
+          const [
+            type,
+            capacity,
+            distance,
+            minBills,
+            maxBills,
+            available,
+            fixedCost,
+            perKmCost,
+          ] = config;
           const mappedType = mapVehicleType(type);
 
           // Create multiple instances based on 'available' count
@@ -4404,6 +4537,8 @@
               registration_number: generateVehicleNumber(),
               max_distance: distance * 1000,
               capacity: capacity,
+              fixed_cost: fixedCost,
+              cost_per_km: perKmCost,
             });
           }
         });
@@ -4512,7 +4647,7 @@
         // Process allocated bills
         apiResponse.deliveries.forEach((delivery) => {
           const originalBill = originalDataMap[delivery.id] || {};
-          console.log(originalBill);
+          // console.log(originalBill);
           const formattedBill = {
             ...originalBill,
             id: delivery.id,
@@ -4696,19 +4831,19 @@
             totalWeightKg: vehicle.total_load,
             totalDistanceKm: vehicle.total_distance / 1000,
             weightUtilization: (() => {
-              const capacity = parseInt(vehicle.vehicle_type.split("_").pop());
+              const capacity = vehicle.capacity;
               return (vehicle.total_load / capacity) * 100;
             })(),
             distanceUtilization: (() => {
-              const maxDistance = parseInt(
-                vehicle.vehicle_type.split("_").slice(-2, -1)[0]
-              );
+              const maxDistance = vehicle.max_distance;
               return (vehicle.total_distance / maxDistance) * 100;
             })(),
             warehouseLat: originalData.warehouse.latitude,
             warehouseLng: originalData.warehouse.longitude,
             furthestPointSeeded: true,
             tspOptimized: true,
+            totalCost: vehicle.cost.total_cost,
+            costPerDelivery: vehicle.cost.cost_per_delivery
           });
         });
 
@@ -4738,6 +4873,18 @@
         );
         const optimizingTimeLimit = parseInt(
           document.getElementById("optimizingTimeLimit").value || "20"
+        );
+        const profitMargin = parseInt(
+          document.getElementById("profitMargin").value || "10"
+        );
+        const bufferMultiplier = parseFloat(
+          document.getElementById("bufferMultiplier").value || "1.5"
+        );
+        const timeIntervalMinutes = parseInt(
+          document.getElementById("timeIntervalMinutes").value || "15"
+        );
+        const penaltyPerInterval = parseInt(
+          document.getElementById("penaltyPerInterval").value || "30"
         );
         const useHaversine = document.getElementById("useHaversine").checked;
         const enforceAllDeliveries = document.getElementById(
@@ -4791,6 +4938,10 @@
           enforce_all_deliveries: enforceAllDeliveries,
           enable_time_windows: enableTimeWindows,
           optimizing_time_limit: optimizingTimeLimit,
+          profit_margin: profitMargin,
+          buffer_multiplier: bufferMultiplier,
+          time_interval_minutes: timeIntervalMinutes,
+          penalty_per_interval: penaltyPerInterval,
         };
 
         // Map column indices
@@ -4919,10 +5070,10 @@
           solver_params: solver_params,
         };
 
-        // console.log(requestPayload);
+        console.log(requestPayload);
 
         // Send API request
-        const API = "https://backend.hermes.sahoobishwajeet.xyz";
+        const API = "http://localhost:8010";
         fetch(`${API}/api/v1/routing/solve`, {
           method: "POST",
           headers: {
@@ -4932,7 +5083,7 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            // console.log("API Response:", data);
+            console.log("API Response:", data);
             const formattedResponse = formatApiResponse(data, requestPayload);
             // console.log("Formatted Response:", formattedResponse);
 

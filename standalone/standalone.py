@@ -86,11 +86,21 @@ class VehicleRoute(BaseModel):
     timeline: List[TimelineEntry] = Field(..., description="Detailed timeline of the route")
 
 
+class VehicleCost(BaseModel):
+    total_cost: float = Field(..., description="Total cost of the vehicle")
+    cost_per_delivery: float = Field(..., description="Cost per delivery")
+    cost_per_km: float = Field(..., description="Cost per kilometer")
+    cost_per_kg: float = Field(..., description="Cost per kilogram")
+
+
 class VehicleOutput(BaseModel):
     vehicle_id: int = Field(..., description="Vehicle identifier")
     vehicle_type: str = Field(..., description="Type of vehicle")
+    cost: VehicleCost = Field(..., description="Cost information for the vehicle")
     total_load: float = Field(..., description="Total weight loaded")
     total_distance: float = Field(..., description="Total distance covered")
+    max_distance: float = Field(..., description="Maximum distance the vehicle can cover")
+    capacity: float = Field(..., description="Vehicle capacity")
     delivery_ids: List[str] = Field(..., description="List of delivery IDs assigned to this vehicle")
     route: VehicleRoute = Field(..., description="Detailed route information")
 
@@ -101,6 +111,10 @@ class Parameters(BaseModel):
     enforce_all_deliveries: bool = Field(False, description="Do not allow dropping any deliveries")
     enable_time_windows: bool = Field(False, description="Enable time windows for deliveries")
     optimizing_time_limit: int = Field(20, description="Time limit for optimization in seconds (optimal between 5 and 30)")
+    profit_margin: int = Field(10, description="Prioritise high bill value deliveries")
+    buffer_multiplier: float = Field(1.5, description="Buffer multiplier for travel time")
+    time_interval_minutes: int = Field(15, description="Time interval for penalties in minutes")
+    penalty_per_interval: int = Field(30, description="Base penalty increase per interval")
 
     @field_validator('optimizing_time_limit')
     def validate_optimizing_time_limit(cls, v):
@@ -152,6 +166,8 @@ class VehicleBase(BaseModel):
     registration_number: str = Field(..., description="Vehicle registration number", example="KA01AB1234")
     max_distance: int = Field(0, description="Total distance covered today in meters", example=100000)
     capacity: int = Field(0, description="Vehicle capacity in kg", example=1000)
+    fixed_cost: int = Field(0, description="Fixed cost of the vehicle", example=10000)
+    cost_per_km: int = Field(0, description="Cost per kilometer for the vehicle", example=5)
 
     @field_validator('vehicle_type')
     def validate_vehicle_type(cls, v):
@@ -208,8 +224,10 @@ async def solve_routing(
             v_type = vehicle["vehicle_type"]
             max_dist = vehicle["max_distance"]
             capacity = vehicle["capacity"]
+            fixed_cost = vehicle["fixed_cost"]
+            cost_per_km = vehicle["cost_per_km"]
 
-            key = (v_type, max_dist, capacity)
+            key = (v_type, max_dist, capacity, fixed_cost, cost_per_km)
             if key not in grouped:
                 grouped[key] = 1
             else:
@@ -223,16 +241,17 @@ async def solve_routing(
         
         grouped_vehicles = _group_vehicles(vehicles)
 
-        for (v_type, max_dist, capacity), count in grouped_vehicles.items():
+        for (v_type, max_dist, capacity, fixed_cost, cost_per_km), count in grouped_vehicles.items():
             static_config = VEHICLE_TYPES[v_type]
 
-            config_key = f"{v_type}_{max_dist}_{capacity}"
+            config_key = f"{v_type}_{max_dist}_{capacity}_{fixed_cost}_{cost_per_km}"
 
             vehicle_config[config_key] = {
                 "capacity": capacity,
                 "max_distance": max_dist,
-                "fixed_cost": static_config["fixed_cost"],
+                "fixed_cost": fixed_cost,
                 "cost_per_delivery": static_config["cost_per_delivery"],
+                "cost_per_km": cost_per_km,
                 "allowed_sizes": static_config["allowed_sizes"],
                 "count": count
             }
@@ -270,7 +289,7 @@ async def solve_routing(
             GRAPHML_PATH = os.path.join(
                 BASE_DIR, "maps", f"{CITY_NAME.lower()}.graphml"
             )
-
+    
         solver_input = generate_solver_input(deliveries, config, solver_params["current_time"], OSM_PATH, GRAPHML_PATH, use_haversine=solver_params['use_haversine'])
 
         # Create and solve routing model
@@ -285,7 +304,11 @@ async def solve_routing(
             solver_input["delivery_ids"],
             config,
             enforce_all=solver_params["enforce_all_deliveries"],
-            optimizing_time_limit=solver_params["optimizing_time_limit"]
+            optimizing_time_limit=solver_params["optimizing_time_limit"],
+            profit_margin=solver_params["profit_margin"],
+            buffer_multiplier=solver_params["buffer_multiplier"],
+            time_interval_minutes=solver_params["time_interval_minutes"],
+            penalty_per_interval=solver_params["penalty_per_interval"]
         )
 
         if not solution:
@@ -348,6 +371,7 @@ def expand_vehicle_types(config):
     vehicle_type_list = []
     vehicle_fixed_costs = []
     vehicle_per_delivery_costs = []
+    vehicle_per_km_costs = []
     vehicle_allowed_sizes = []
 
     for vehicle_type, props in config["vehicle_types"].items():
@@ -357,9 +381,10 @@ def expand_vehicle_types(config):
             vehicle_type_list.append(vehicle_type)
             vehicle_fixed_costs.append(props.get("fixed_cost", 0))
             vehicle_per_delivery_costs.append(props.get("cost_per_delivery", 0))
+            vehicle_per_km_costs.append(props.get("cost_per_km", 0))
             vehicle_allowed_sizes.append(set(props.get("allowed_sizes", [])))
 
-    return vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_allowed_sizes
+    return vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_per_km_costs, vehicle_allowed_sizes
 
 
 def expand_deliveries(delivery_ids, deliveries):
@@ -375,13 +400,18 @@ def expand_deliveries(delivery_ids, deliveries):
 def format_solution_output(routing, manager, solution, solver_input, data, config):
     """Format solution in required JSON format with vehicle and time info."""
     time_dimension = routing.GetDimensionOrDie("Time")
-    vehicle_type_list = expand_vehicle_types(config)[2]
-    
+    vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, _, vehicle_per_km_costs, _ = expand_vehicle_types(config)
+
     deliveries = []
     vehicles = []
 
     for vehicle_id in range(routing.vehicles()):
         vehicle_type = vehicle_type_list[vehicle_id]
+        max_distance = vehicle_distances[vehicle_id]
+        capacity = vehicle_capacities[vehicle_id]
+        fixed_cost = vehicle_fixed_costs[vehicle_id]
+        vehicle_per_km_cost = vehicle_per_km_costs[vehicle_id]
+            
         index = routing.Start(vehicle_id)
         
         # Skip empty routes
@@ -391,8 +421,16 @@ def format_solution_output(routing, manager, solution, solver_input, data, confi
         stats = {
             "vehicle_id": vehicle_id,
             "vehicle_type": vehicle_type,
+            "cost": {
+                "total_cost": 0.0,
+                "cost_per_delivery": 0.0,
+                "cost_per_km": 0.0,
+                "cost_per_kg": 0.0
+            },
             "total_load": 0,
             "total_distance": 0,
+            "max_distance": max_distance,
+            "capacity": capacity,
             "delivery_ids": [],
             "route": {
                 "sequence": [],
@@ -468,6 +506,19 @@ def format_solution_output(routing, manager, solution, solver_input, data, confi
             stats["route"]["latest_end_time"] = minutes_to_time_str(
                 end_max, config
             )
+
+            total_dist = stats["total_distance"] / 1000.0
+            total_load = stats["total_load"]
+
+            total_cost = fixed_cost + (total_dist * vehicle_per_km_cost)
+
+            stats["cost"] = {
+                "total_cost": total_cost,
+                "cost_per_delivery": total_cost / len(stats["delivery_ids"]) if stats["delivery_ids"] else 0.0,
+                "cost_per_km": total_cost / total_dist if total_dist else 0.0,
+                "cost_per_kg": total_cost / total_load if total_load else 0.0
+            }
+
             vehicles.append(stats)
 
     return {
@@ -659,18 +710,18 @@ def generate_solver_input(deliveries, config, current_time, OSM_PATH, GRAPHML_PA
 
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
-# Distance constants
-DISTANCE_CONST = 0.002 # ₹2 per km
 
-# Penalty constants
-PROFIT_MARGIN_PERCENT = 10
-BUFFER_MULTIPLIER = 1.5  # Buffer multiplier for travel time
-TIME_INTERVAL_MINUTES = 15  # Every X minutes
-PENALTY_PER_INTERVAL = 30  # Base penalty increase per interval
+def create_routing_model(distance_matrix, demands, time_matrix, time_windows, amounts, sizes, promised_time_deltas, delivery_ids, config, enforce_all=False, optimizing_time_limit=20, profit_margin=10, buffer_multiplier=1.5, time_interval_minutes=15, penalty_per_interval=30):
+    # Distance constants
+    total_cost = 0
+    total_count = 0
+    for _, props in config["vehicle_types"].items():
+        total_cost += props["cost_per_km"] * props["count"]
+        total_count += props["count"]
 
+    DISTANCE_CONST = total_cost / (total_count * 1000) if total_count > 0 else 0.002 # Fallback - 2 per km
 
-def create_routing_model(distance_matrix, demands, time_matrix, time_windows, amounts, sizes, promised_time_deltas, delivery_ids,config, enforce_all=False, optimizing_time_limit=20):
-    vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_allowed_sizes = expand_vehicle_types(config)
+    vehicle_capacities, vehicle_distances, vehicle_type_list, vehicle_fixed_costs, vehicle_per_delivery_costs, vehicle_per_km_costs, vehicle_allowed_sizes = expand_vehicle_types(config)
     num_vehicles = len(vehicle_capacities)
     
     if promised_time_deltas is None:
@@ -681,7 +732,7 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
     routing = pywrapcp.RoutingModel(manager)
 
     # 0. Enforce size contraint based on vehicle type
-    for node in range(1, len(distance_matrix)):  # skip d5epot
+    for node in range(1, len(distance_matrix)):  # skip depot
         pkg_size = sizes[node]
         if pkg_size is None:
             continue
@@ -812,17 +863,17 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
     else:
         for node in range(1, len(distance_matrix)):
             order_amount = amounts[node]
-            base_penalty = min(250, int(order_amount * PROFIT_MARGIN_PERCENT / 100))
+            base_penalty = min(250, int(order_amount * profit_margin / 100))
             
             travel_time = time_matrix[config['depot_index']][node]
-            buffered_travel_time = int(travel_time * BUFFER_MULTIPLIER)
+            buffered_travel_time = int(travel_time * buffer_multiplier)
             promised_time_delta = promised_time_deltas[node]
             
             if promised_time_delta <= buffered_travel_time:
                 time_difference = buffered_travel_time - promised_time_delta
-                num_intervals = time_difference // TIME_INTERVAL_MINUTES + 1
+                num_intervals = time_difference // time_interval_minutes + 1
                 
-                urgency_penalty = PENALTY_PER_INTERVAL * (2 ** num_intervals)
+                urgency_penalty = penalty_per_interval * (2 ** num_intervals)
                 penalty = base_penalty + urgency_penalty
 
             else:
