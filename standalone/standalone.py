@@ -536,8 +536,12 @@ import math
 import osmnx as ox
 import networkx as nx
 from functools import lru_cache
+import threading
 
 EARTH_RADIUS_KM = 6371.0
+
+from distance_cache import DistanceCache, make_key
+distance_cache = DistanceCache()
 
 
 def build_and_save_graph(OSM_PATH, GRAPHML_PATH):
@@ -666,22 +670,90 @@ def generate_solver_input(deliveries, config, current_time, OSM_PATH, GRAPHML_PA
     if use_haversine:
         distance_matrix = calculate_distance_matrix_haversine(locations)
     else:
+        keys = [
+            make_key(location_labels[i], locations[i][0], locations[i][1])
+            for i in range(num_locations)
+        ]
         distance_matrix = [[0] * num_locations for _ in range(num_locations)]
+
+        # Current batch as dict {key: (lat, lon)}
+        loc_dict = {keys[i]: locations[i] for i in range(num_locations)}
+
+        missed_keys = set()
+
         for i in range(num_locations):
-            dist_dict = get_all_distances_from(locations[i], OSM_PATH, GRAPHML_PATH)
-            for j in range(i + 1, num_locations):
-                node_j = coord_to_node(locations[j], OSM_PATH, GRAPHML_PATH)
-                if node_j in dist_dict:
-                    dist_m = dist_dict[node_j]
+            for j in range(num_locations):
+                if i == j:
+                    continue
+
+                cached = distance_cache.get_distance(keys[i], keys[j])
+                if cached is not None:
+                    distance_matrix[i][j] = cached
                 else:
-                    dist_m = ox.distance.great_circle_vec(
-                        locations[i][0], locations[i][1],
-                        locations[j][0], locations[j][1]
-                    )
-                dist_km = dist_m / 1000
-                dist_mm = int(round(dist_km, 3) * 1000)
-                distance_matrix[i][j] = dist_mm
-                distance_matrix[j][i] = dist_mm  # symmetry
+                    dist_dict = get_all_distances_from(locations[i], OSM_PATH, GRAPHML_PATH)
+                    node_j = coord_to_node(locations[j], OSM_PATH, GRAPHML_PATH)
+                    if node_j in dist_dict:
+                        dist_m = dist_dict[node_j]
+                    else:
+                        dist_m = ox.distance.great_circle(
+                            locations[i][0], locations[i][1],
+                            locations[j][0], locations[j][1]
+                        )
+                    dist_km = dist_m / 1000
+                    dist_mm = int(round(dist_km, 3) * 1000)
+
+                    distance_matrix[i][j] = dist_mm
+                    distance_cache.set_distance(keys[i], keys[j], dist_mm)
+
+                    missed_keys.add(keys[i])
+                    missed_keys.add(keys[j])
+
+        if missed_keys:
+            stored_locations = distance_cache.cache.keys()
+            
+            def calculate_background_distances():
+                """Calculate distances for new locations with all stored locations"""
+                
+                for new_key in missed_keys:
+                    new_lat = float(new_key.split("_")[-2])
+                    new_lon = float(new_key.split("_")[-1])
+                    new_loc = (new_lat, new_lon)
+                    
+                    distances = {}
+                    
+                    for stored_key in stored_locations:
+                        if stored_key == new_key:
+                            continue
+                            
+                        try:
+                            # First try OSM routing
+                            dist_dict = get_all_distances_from(new_loc, OSM_PATH, GRAPHML_PATH)
+                            node = coord_to_node(
+                                (float(stored_key.split("_")[-2]), 
+                                float(stored_key.split("_")[-1])), 
+                                OSM_PATH, GRAPHML_PATH
+                            )
+                            
+                            if node in dist_dict:
+                                distance = dist_dict[node]
+                            else:
+                                # Fallback to great circle
+                                distance = ox.distance.great_circle(
+                                    new_lat, new_lon,
+                                    float(stored_key.split("_")[-2]),
+                                    float(stored_key.split("_")[-1])
+                                )
+
+                            dist_km = distance / 1000
+                            dist_mm = int(round(dist_km, 3) * 1000)
+                            distances[stored_key] = dist_mm
+
+                        except Exception as e:
+                            print(f"Error calculating distance for {new_key} ↔ {stored_key}: {e}")
+                    
+                    distance_cache.background_fill(new_key, distances)
+            
+            threading.Thread(target=calculate_background_distances, daemon=True).start()
 
     speed_mpm = (config["average_speed"] * 1000) / 60
     time_matrix = [
@@ -888,10 +960,10 @@ def create_routing_model(distance_matrix, demands, time_matrix, time_windows, am
     search_parameters.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PARALLEL_CHEAPEST_INSERTION
     search_parameters.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     search_parameters.time_limit.seconds = optimizing_time_limit
-
+    # search_parameters.log_search = True
 
     solution = routing.SolveWithParameters(search_parameters)
-    
+
     solution_report = ""
     if solution:
         time_dimension = routing.GetDimensionOrDie("Time")

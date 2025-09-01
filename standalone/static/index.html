@@ -794,7 +794,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm trip-distance-input"
-                          value="30"
+                          value="25"
                           min="1"
                           required
                         />
@@ -821,7 +821,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm available-count-input"
-                          value="0"
+                          value="2"
                           min="0"
                           required
                         />
@@ -830,7 +830,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm fixed-cost-input"
-                          value="1000"
+                          value="500"
                           min="0"
                           required
                         />
@@ -839,7 +839,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm per-km-cost-input"
-                          value="2"
+                          value="10"
                           min="0"
                           required
                         />
@@ -872,7 +872,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm trip-distance-input"
-                          value="30"
+                          value="25"
                           min="1"
                           required
                         />
@@ -899,7 +899,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm available-count-input"
-                          value="0"
+                          value="2"
                           min="0"
                           required
                         />
@@ -908,7 +908,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm fixed-cost-input"
-                          value="1000"
+                          value="450"
                           min="0"
                           required
                         />
@@ -917,7 +917,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm per-km-cost-input"
-                          value="2"
+                          value="10"
                           min="0"
                           required
                         />
@@ -941,7 +941,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm trip-kg-input"
-                          value="100"
+                          value="60"
                           min="1"
                           required
                         />
@@ -977,7 +977,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm available-count-input"
-                          value="0"
+                          value="1"
                           min="0"
                           required
                         />
@@ -986,7 +986,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm fixed-cost-input"
-                          value="1000"
+                          value="350"
                           min="0"
                           required
                         />
@@ -995,7 +995,7 @@
                         <input
                           type="number"
                           class="form-control form-control-sm per-km-cost-input"
-                          value="2"
+                          value="10"
                           min="0"
                           required
                         />
@@ -1031,7 +1031,7 @@
                     type="time"
                     class="form-control form-control-sm"
                     id="warehouseStartTime"
-                    value="08:00"
+                    value="06:00"
                     required
                   />
                 </div>
@@ -1059,7 +1059,7 @@
                     type="time"
                     class="form-control form-control-sm"
                     id="tripStartTime"
-                    value="08:00"
+                    value="06:00"
                     required
                   />
                 </div>
@@ -1103,7 +1103,7 @@
                     type="number"
                     class="form-control form-control-sm"
                     id="optimizingTimeLimit"
-                    value="20"
+                    value="25"
                     min="15"
                     max="40"
                     required
@@ -1136,7 +1136,7 @@
                     type="number"
                     class="form-control form-control-sm"
                     id="bufferMultiplier"
-                    value="1.5"
+                    value="1.0"
                     min="1"
                     step="0.1"
                     required
@@ -1146,7 +1146,8 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="timeIntervalMinutes" class="form-label"
-                    >Time Interval (minutes) - Breach Time Penalty Interval</label
+                    >Time Interval (minutes) - Breach Time Penalty
+                    Interval</label
                   >
                   <input
                     type="number"
@@ -2918,13 +2919,13 @@
         const newRow = document.createElement("tr");
         newRow.innerHTML = `
                 <td><input type="text" class="form-control form-control-sm" value="" required></td>
-                <td><input type="number" class="form-control form-control-sm" value="1000" min="1" required></td>
-                <td><input type="number" class="form-control form-control-sm" value="100" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="800" min="1" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="25" min="1" required></td>
                 <td><input type="number" class="form-control form-control-sm" value="1" min="1" required></td>
-                <td><input type="number" class="form-control form-control-sm" value="20" min="1" required></td>
-                <td><input type="number" class="form-control form-control-sm" value="1" min="0" required></td>
-                <td><input type="number" class="form-control form-control-sm" value="1000" min="0" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="25" min="1" required></td>
                 <td><input type="number" class="form-control form-control-sm" value="2" min="0" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="500" min="0" required></td>
+                <td><input type="number" class="form-control form-control-sm" value="10" min="0" required></td>
                 <td><button class="btn btn-sm btn-danger remove-vehicle">Remove</button></td>
                 `;
         tbody.appendChild(newRow);
@@ -3403,7 +3404,7 @@
           "Total Cost",
           "Cost per Delivery",
           "Weight Util. (%)",
-          "Distance Util. (%)"
+          "Distance Util. (%)",
         ];
         let html = `
                 <div class="table-responsive">
@@ -4843,7 +4844,7 @@
             furthestPointSeeded: true,
             tspOptimized: true,
             totalCost: vehicle.cost.total_cost,
-            costPerDelivery: vehicle.cost.cost_per_delivery
+            costPerDelivery: vehicle.cost.cost_per_delivery,
           });
         });
 
@@ -4855,6 +4856,28 @@
           showError("Please upload Bills CSV data first.");
           return;
         }
+
+        // Set up the progress bar and status message on the user interface
+        const progressContainer = document.getElementById(
+          "optimizationProgress"
+        );
+        const progressBar = document.getElementById("optimizationProgressBar");
+        const statusDiv = document.getElementById("optimizationStatus");
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
+        progressBar.classList.remove("bg-danger");
+        progressBar.classList.add("bg-success");
+        statusDiv.textContent = "Starting optimization...";
+
+        // Start a visual progress animation
+        let currentProgress = 0;
+        const progressInterval = setInterval(() => {
+          if (currentProgress < 95) {
+            currentProgress += 5;
+            progressBar.style.width = `${currentProgress}%`;
+            statusDiv.textContent = `Optimizing... (${currentProgress}%)`;
+          }
+        }, 1000);
 
         // Get the solver parameters from the configuration form
         const warehouseStartTime =
@@ -4957,7 +4980,6 @@
           dropEndTime: currentBillsHeaders.indexOf("Drop End Time"),
           disposition: currentBillsHeaders.indexOf("Disposition"),
         };
-
         // Validate all required fields are present
         for (const [key, value] of Object.entries(headerIndices)) {
           if (value === -1) {
@@ -5058,6 +5080,7 @@
           });
 
         if (transformedBills.length === 0) {
+          clearInterval(progressInterval);
           showError("No bills match the selected dispositions.");
           return;
         }
@@ -5073,7 +5096,7 @@
         console.log(requestPayload);
 
         // Send API request
-        const API = "http://localhost:8010";
+        const API = "http://localhost:8012";
         fetch(`${API}/api/v1/routing/solve`, {
           method: "POST",
           headers: {
@@ -5083,9 +5106,13 @@
         })
           .then((response) => response.json())
           .then((data) => {
+            clearInterval(progressInterval);
+            progressBar.style.width = `100%`;
+            statusDiv.textContent = `Optimization completed.`;
+
             console.log("API Response:", data);
             const formattedResponse = formatApiResponse(data, requestPayload);
-            // console.log("Formatted Response:", formattedResponse);
+            console.log("Formatted Response:", formattedResponse);
 
             // Update global variables with formatted data
             allAllocatedBillsData = formattedResponse.allocatedBills;
@@ -5115,6 +5142,13 @@
             showToast("Success", "Optimization request completed", "success");
           })
           .catch((error) => {
+            // Handle errors with progress bar
+            clearInterval(progressInterval);
+            progressBar.classList.remove("bg-success");
+            progressBar.classList.add("bg-danger");
+            progressBar.style.width = "100%";
+            statusDiv.textContent = "Optimization failed";
+
             console.error("Error:", error);
             showError("Failed to send optimization request: " + error.message);
           });
